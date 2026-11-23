@@ -190,7 +190,7 @@
     /* ==================== ОСНОВНОЙ ИНТЕРФЕЙС ==================== */
     #appScreen {
       display: none;
-      padding-bottom: 155px;
+      padding-bottom: 195px;
     }
 
     .topbar {
@@ -358,20 +358,6 @@
       color: var(--accent);
     }
 
-    .msg-card {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-
-    .msg-card.unread {
-      border-color: var(--accent);
-      box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
-    }
-
     .chat-messages {
       max-height: 250px;
       overflow-y: auto;
@@ -461,14 +447,14 @@
     /* ==================== ОБУЧАЛКА СО ШКИПЕРОМ ==================== */
     #skipperTutorial {
       position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 78px;
+      left: 10px;
+      right: 10px;
+      bottom: 66px;
       z-index: 60;
       display: none;
       flex-direction: column;
       align-items: flex-start;
-      gap: 8px;
+      gap: 6px;
       pointer-events: none;
     }
 
@@ -479,38 +465,36 @@
     .skipper-bubble {
       background: #1b1530;
       border: 2px solid var(--accent);
-      border-radius: 16px;
-      padding: 12px 14px;
+      border-radius: 14px;
+      padding: 9px 12px;
       color: #fff;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
-      line-height: 1.4;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+      line-height: 1.35;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.8);
       pointer-events: auto;
-      max-width: 100%;
+      max-width: calc(100% - 66px);
     }
 
     .skipper-row {
       display: flex;
-      align-items: center;
-      gap: 10px;
+      align-items: flex-end;
+      gap: 8px;
       pointer-events: auto;
     }
 
     .skipper-avatar {
-      width: 54px;
-      height: 54px;
-      border-radius: 16px;
-      background: var(--accent);
-      color: #090a0f;
-      border: 2px solid #fff;
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: #090a0f;
+      border: 2px solid var(--accent);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 900;
-      font-size: 13px;
       overflow: hidden;
       flex-shrink: 0;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
     }
 
     .skipper-avatar img {
@@ -523,7 +507,7 @@
       position: relative;
       z-index: 65 !important;
       outline: 3px solid var(--highlight) !important;
-      box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.28), 0 0 24px rgba(250, 204, 21, 0.85) !important;
+      box-shadow: 0 0 0 5px rgba(250, 204, 21, 0.25), 0 0 20px rgba(250, 204, 21, 0.8) !important;
       animation: pulseGlow 1.1s infinite alternate;
     }
 
@@ -532,7 +516,7 @@
         transform: scale(1);
       }
       to {
-        transform: scale(1.02);
+        transform: scale(1.015);
       }
     }
 
@@ -580,7 +564,7 @@
       line-height: 1.05;
       text-align: center;
       color: #ffffff;
-      word-break: break-all;
+      word-break: break-word;
     }
 
     .nav-item.active svg {
@@ -647,12 +631,11 @@
 
     <!-- Обучалка со Шкипером -->
     <div id="skipperTutorial">
-      <div class="skipper-bubble" id="skipperBubble"></div>
       <div class="skipper-row">
         <div class="skipper-avatar" id="skipperAvatar">
-          <!-- Для аватара Шкипера используется скриншот от пользователя (image_33.png) -->
-          <img src="skipper.png" alt="Шкипер" onerror="this.src='https://i.ibb.co/6P93v0P/skipper.png'; this.onerror=null;" />
+          <img id="skipperImg" src="skipper.png" alt="Шкипер" />
         </div>
+        <div class="skipper-bubble" id="skipperBubble"></div>
       </div>
     </div>
 
@@ -728,6 +711,28 @@
     const BOT_TOKEN = "";
     const ADMIN_CHAT_ID = "";
     const ADMIN_USERNAME = "NormalFunk";
+
+    // Встроенный аватар Шкипера (SVG в очках), если рядом в репозитории нет файла skipper.png
+    const FALLBACK_SKIPPER_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+        <rect width="120" height="120" fill="#0b0d14"/>
+        <ellipse cx="60" cy="68" rx="34" ry="42" fill="#111318"/>
+        <ellipse cx="60" cy="76" rx="22" ry="30" fill="#f8fafc"/>
+        <path d="M36 42 Q60 22 84 42 Q76 54 60 52 Q44 54 36 42 Z" fill="#f8fafc"/>
+        <rect x="33" y="42" width="23" height="15" rx="4" fill="#1e293b" stroke="#facc15" stroke-width="2.5"/>
+        <rect x="64" y="42" width="23" height="15" rx="4" fill="#1e293b" stroke="#facc15" stroke-width="2.5"/>
+        <line x1="56" y1="48" x2="64" y2="48" stroke="#facc15" stroke-width="2.5"/>
+        <polygon points="48,58 72,58 60,73" fill="#f59e0b"/>
+      </svg>
+    `);
+
+    const skipperImgEl = document.getElementById("skipperImg");
+    if (skipperImgEl) {
+      skipperImgEl.onerror = function () {
+        this.onerror = null;
+        this.src = FALLBACK_SKIPPER_SVG;
+      };
+    }
 
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) {
@@ -817,13 +822,6 @@
     let otherSubView = "menu";
     let profileTab = "orders";
 
-    // Обучение:
-    // 0 - не активно
-    // 1 - ждём клика МАГАЗИН
-    // 2 - ждём ОБУЧЕНИЕ в магазине
-    // 3 - открыта оплата
-    // 4 - перешли в СООБЩЕНИЯ, ждём чат
-    // 5 - открыт чат с поздравлением
     let tutorialStep = 0;
     let threadChatHistory = {};
 
@@ -1012,7 +1010,6 @@
       promptTutorial(guestObj);
     }
 
-    /* ПОКАЗ МОДАЛКИ: ХОТИТЕ ПРОЙТИ ОБУЧЕНИЕ? */
     function promptTutorial(userObj) {
       currentUser = userObj;
       const box = document.getElementById("authBox");
@@ -1073,33 +1070,28 @@
       box.classList.add("active");
 
       if (tutorialStep === 1) {
-        bubble.textContent = "ЧТО-БЫ КУПИТЬ ЧТО-ТО ТО НАЖМИТЕ НА КНОПКУ МАГАЗИН";
+        bubble.textContent = "Чтобы купить донат — нажми внизу на «МАГАЗИН».";
         const shopBtn = document.getElementById("navShopBtn");
         if (shopBtn) shopBtn.classList.add("tutorial-highlight");
       } else if (tutorialStep === 2) {
-        bubble.textContent = "ЗДЕСЬ ТЫ МОЖЕШЬ ВЫБРАТЬ КАТЕГОРИЮ ДЛЯ ДОНАТА, ДАВАЙ ЧТО-ТО ЗАКАЖЕМ.";
+        bubble.textContent = "Нажми на кнопку «ОБУЧЕНИЕ — 0 сум (Купить)», чтобы попробовать оформить заказ.";
         const buyBtn = document.getElementById("tutorialBuyBtn");
         if (buyBtn) buyBtn.classList.add("tutorial-highlight");
       } else if (tutorialStep === 3) {
-        bubble.textContent = "ОБЯЗАТЕЛЬНО КОГДА ЧТО-ТО ПОКУПАЕШЬ ТО ВЫБИРАЙ СПОСОБ ОПЛАТЫ. СЕЙЧАС ВЫБЕРИ ЛЮБОЙ СПОСОБ ОПЛАТЫ (ДЕНЬГИ ЗАБИРАТЬ НЕ БУДЕМ).";
+        bubble.textContent = "Выбери любой способ оплаты и нажми «Купить» (деньги не списываются).";
         const payBox = document.getElementById("paymentSelect");
         if (payBox) payBox.classList.add("tutorial-highlight");
       } else if (tutorialStep === 4) {
-        bubble.textContent = "ЗДЕСЬ НАХОДЯТСЯ ВСЕ СООБЩЕНИЯ С ПРОДАВЦОМ.";
-        // Создаём диалог во встроенном чате
+        bubble.textContent = "Отлично! Теперь перейди в «СООБЩЕНИЯ» — там уже ждёт ответ продавца.";
         const adminId = "NormalFunk";
         threadChatHistory[adminId] = [
-          { sender: "admin", text: "Привет! Твой заказ по обучению зарегистрирован." },
+          { sender: "admin", text: "Привет! Тестовый заказ по обучению принят." },
           { sender: "admin", text: "ПОЗДРАВЛЯЮ!!! ТЫ ПРОШЁЛ ОБУЧЕНИЕ" }
         ];
-        
-        // Автоматически переходим в сообщения, чтобы иконка зажглась
         const msgBtn = document.getElementById("navMessagesBtn");
         if (msgBtn) msgBtn.classList.add("tutorial-highlight");
       } else if (tutorialStep === 5) {
-        bubble.textContent = "ТЕБЕ НАПИСАЛ ПРОДАВЕЦ, ТЕПЕРЬ ПЕРЕЙДИ К НЕМУ В ЧАТ СВЕРХУ";
-        const chatItem = document.getElementById("tutChatItem");
-        if (chatItem) chatItem.classList.add("tutorial-highlight");
+        bubble.textContent = "Вот чат с продавцом! Можешь написать сообщение или нажать «ЗАВЕРШИТЬ ОБУЧЕНИЕ».";
       }
     }
 
@@ -1379,10 +1371,10 @@
           <div class="panel center-msg">
             <div class="section-title">💬 ОТЗЫВЫ NORMALBLOX STORE</div>
             <p class="muted">
-              Все сделки проводятся прозрачно и с гарантией честности. Чтобы посмотреть актуальные отзывы или оставить свой, напишите владельцу проекта <b>@${ADMIN_USERNAME}</b>.
+              Все сделки проводятся прозрачно и с гарантией честности. По всем вопросам и отзывам можно написать напрямую в чат на сайте или в Telegram <b>@${ADMIN_USERNAME}</b>.
             </p>
             <div class="menu-grid">
-              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">✉️ Написать @${ADMIN_USERNAME}</a>
+              <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="navigate('messages')">💬 Открыть чат на сайте</button>
               <button class="menu-btn" onclick="setShopSub('menu')">↩ Назад</button>
             </div>
           </div>
@@ -1458,6 +1450,7 @@
       recordOrderAndNotify("Brainrot", `${name} (${brainrotForm.mutation})`, "По договорённости", payloadText);
       brainrotForm = { name: "", mutation: "", buff: "" };
       setShopSub("menu");
+      alert("Заказ по Brainrot отправлен!");
     }
 
     /* ==================== ОФОРМЛЕНИЕ ЗАКАЗА И ОПЛАТА ==================== */
@@ -1472,8 +1465,8 @@
       document.getElementById("checkoutModal").classList.add("open");
 
       if (tutorialStep === 2 && isTutorialItem) {
-        // Мы НЕ меняем шаг туториала на 3 СРАЗУ, дабы не спугнуть highlight, 
-        // а ждём пока юзер действительно откроет и начнет выбирать.
+        tutorialStep = 3;
+        updateTutorialUI();
       }
     }
 
@@ -1485,9 +1478,10 @@
     }
 
     function closeCheckoutModal() {
+      const wasTutorial = pendingOrder && pendingOrder.isTutorialItem;
       pendingOrder = null;
       document.getElementById("checkoutModal").classList.remove("open");
-      if (tutorialStep === 3) {
+      if (tutorialStep === 3 && wasTutorial) {
         tutorialStep = 2;
         updateTutorialUI();
       }
@@ -1512,11 +1506,14 @@
         `• Способ оплаты: ${method}`;
 
       recordOrderAndNotify(category, itemName, priceStr, text, method);
-      closeCheckoutModal();
+      pendingOrder = null;
+      document.getElementById("checkoutModal").classList.remove("open");
 
       if (isTutorialItem) {
         tutorialStep = 4;
         navigate("messages");
+      } else {
+        alert("Заказ оформлен и отправлен!");
       }
     }
 
@@ -1524,14 +1521,14 @@
     function renderMessagesView() {
       const adminId = "NormalFunk";
       const history = threadChatHistory[adminId] || [
-        { sender: "admin", text: `Добро пожаловать в поддержку NORMALBLOX STORE! Вы можете написать @${ADMIN_USERNAME} прямо здесь.` }
+        { sender: "admin", text: `Добро пожаловать в чат с @${ADMIN_USERNAME}! Напишите сюда свой вопрос или сообщение по заказу.` }
       ];
 
       return `
         <div class="panel" id="tutChatItem">
-          <div class="section-title">💬 ЧАТ С АДМИНИСТРАТОРОМ NormalFunk</div>
-          <p class="muted">Вы общаетесь напрямую внутри приложения.</p>
-          
+          <div class="section-title">💬 ЧАТ С @${ADMIN_USERNAME}</div>
+          <p class="muted">Переписка работает прямо внутри сайта без перехода в Telegram.</p>
+
           <div class="chat-messages" id="chatScreenContainer">
             ${history.map((msg) => `
               <div class="chat-msg ${msg.sender === "user" ? "outgoing" : "incoming"}">
@@ -1541,7 +1538,7 @@
           </div>
 
           <div class="chat-input-row">
-            <input type="text" id="chatInputField" placeholder="Введите ваше сообщение..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+            <input type="text" id="chatInputField" placeholder="Введите сообщение..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
             <button class="btn btn-yellow" style="width: auto; padding: 0 16px;" onclick="sendChatMessage()">Отправить</button>
           </div>
 
@@ -1565,14 +1562,12 @@
       }
 
       threadChatHistory[adminId].push({ sender: "user", text });
-      
-      // Бот-уведомление администратору о сообщении в чате
-      dispatchToAdmin("Новое сообщение в чате", `💬 *Сообщение от пользователя*:\n${text}`);
+      dispatchToAdmin("Новое сообщение в чате", `💬 *Сообщение в чате сайта*:\n${text}`);
 
       input.value = "";
       renderCurrentView();
+      updateTutorialUI();
 
-      // Авто-скролл вниз
       const chatContainer = document.getElementById("chatScreenContainer");
       if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
     }
@@ -1616,7 +1611,7 @@
             </div>
             <div class="menu-grid">
               <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Подать заявку на рекламу', 'adsText')">📝 Подать заявку на рекламу</button>
-              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn" onclick="navigate('messages')">💬 Чат с @${ADMIN_USERNAME}</button>
               <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
             </div>
           </div>
@@ -1642,7 +1637,7 @@
             </div>
             <div class="menu-grid">
               <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Заявка на сотрудничество', 'partnerText')">📝 Подать заявку на сотрудничество</button>
-              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn" onclick="navigate('messages')">💬 Чат с @${ADMIN_USERNAME}</button>
               <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
             </div>
           </div>
@@ -1668,7 +1663,7 @@
             </div>
             <div class="menu-grid">
               <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Заявка на коллаборацию', 'collabText')">📝 Подать заявку на коллаборацию</button>
-              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn" onclick="navigate('messages')">💬 Чат с @${ADMIN_USERNAME}</button>
               <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
             </div>
           </div>
@@ -1693,7 +1688,7 @@
       const msg = `📌 *${title}*\n• Сообщение: ${val}`;
       dispatchToAdmin(title, msg);
       if (el) el.value = "";
-      alert("Заявка отправлена!");
+      alert("Отправлено администратору!");
     }
 
     /* ==================== 5. ВСТУПИТЬ В КОМАНДУ ==================== */
@@ -1765,7 +1760,7 @@
 
           <div class="menu-grid">
             <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="submitTeamForm()">📝 Подать заявку в набор команды</button>
-            <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+            <button class="menu-btn" onclick="navigate('messages')">💬 Чат с @${ADMIN_USERNAME}</button>
             <button class="menu-btn wide" onclick="navigate('home')">↩ Назад</button>
           </div>
         </div>
@@ -1968,10 +1963,9 @@
       const chatLink = getUserChatLink();
       const fullReport =
         `${bodyMarkdown}\n` +
-        `• Покупатель: ${currentUser.nick} (${currentUser.tgUsername})\n` +
+        `• Пользователь: ${currentUser.nick} (${currentUser.tgUsername})\n` +
         `• Чат с пользователем: ${chatLink}`;
 
-      // Отправка в бот Telegram, если настроены BOT_TOKEN и ADMIN_CHAT_ID
       if (BOT_TOKEN && ADMIN_CHAT_ID) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: "POST",
@@ -1984,7 +1978,6 @@
         }).catch(() => {});
       }
 
-      // Если запущено в Telegram Mini App, отправляем данные обратно в бота
       if (tg && tg.sendData) {
         tg.sendData(JSON.stringify({
           type: "user_action",
@@ -2001,8 +1994,7 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
-    
-    // Инициализация при открытии страницы
+
     resetAuthStart();
   </script>
 </body>
