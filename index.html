@@ -2,20 +2,24 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NORMALBLOX STORE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NORMALBLOX STORE — NormalFunk</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #0c0e12;
-      --card: #151921;
-      --card-2: #1c212c;
+      --bg-auth: #090514;
+      --bg-purple: #16092e;
+      --bg-main: #0c0e14;
+      --surface: #151923;
+      --surface-2: #1d2230;
       --accent: #facc15;
-      --accent-hover: #eab308;
+      --accent-2: #eab308;
       --neon: #4ade80;
+      --danger: #f87171;
       --text: #f8fafc;
       --muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.09);
+      --highlight: #facc15;
     }
 
     * {
@@ -23,431 +27,1979 @@
       margin: 0;
       padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body {
-      background: var(--bg);
+      background: var(--bg-main);
       color: var(--text);
-      padding-bottom: 105px;
       min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    .header {
-      padding: 18px 16px 12px;
-      background: linear-gradient(180deg, rgba(250, 204, 21, 0.14) 0%, rgba(12, 14, 18, 0) 100%);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .brand-row {
+    /* ==================== ЭКРАН ВХОДА / АНИМАЦИЯ ==================== */
+    #authScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: radial-gradient(circle at 20% 15%, #240c4a 0%, #110624 48%, #07040e 100%);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
     }
 
-    .brand {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 0.4px;
+    .diagonal-beam {
+      position: absolute;
+      top: -35%;
+      left: -35%;
+      width: 170%;
+      height: 10px;
+      background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.25), #facc15, rgba(250, 204, 21, 0.25), transparent);
+      box-shadow: 0 0 24px rgba(250, 204, 21, 0.85), 0 0 50px rgba(250, 204, 21, 0.45);
+      transform: rotate(36deg);
+      animation: sweepBeam 3.2s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes sweepBeam {
+      0% {
+        transform: translate(-45%, -45%) rotate(36deg);
+        opacity: 0.25;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate(45%, 45%) rotate(36deg);
+        opacity: 0.25;
+      }
+    }
+
+    .auth-box {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 400px;
+      background: rgba(18, 12, 34, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(250, 204, 21, 0.28);
+      border-radius: 22px;
+      padding: 24px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+    }
+
+    .auth-title {
+      font-size: 23px;
+      font-weight: 900;
       color: var(--accent);
+      text-align: center;
+      letter-spacing: 0.4px;
     }
 
-    .badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: rgba(74, 222, 128, 0.14);
-      color: var(--neon);
-      border: 1px solid rgba(74, 222, 128, 0.3);
-    }
-
-    .subtitle {
-      margin-top: 6px;
+    .auth-sub {
+      margin-top: 8px;
       font-size: 13px;
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .payments {
-      margin-top: 10px;
-      font-size: 12px;
       color: #cbd5e1;
-      background: var(--card);
-      padding: 8px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      text-align: center;
+      line-height: 1.45;
     }
 
-    .tabs {
+    .auth-actions {
+      margin-top: 20px;
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 12px 16px;
-      scrollbar-width: none;
+      flex-direction: column;
+      gap: 10px;
     }
 
-    .tabs::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab {
-      flex: 0 0 auto;
-      padding: 8px 14px;
-      border-radius: 12px;
+    .btn {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 13px;
       border: 1px solid var(--border);
-      background: var(--card);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 700;
       cursor: pointer;
       transition: 0.15s ease;
     }
 
-    .tab.active {
-      background: var(--accent);
-      color: #0c0e12;
+    .btn:hover {
       border-color: var(--accent);
     }
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      padding: 4px 16px 16px;
+    .btn-yellow {
+      background: var(--accent);
+      color: #090a0f;
+      border-color: var(--accent);
+      font-weight: 800;
     }
 
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 12px;
+    .btn-yellow:hover {
+      background: var(--accent-2);
+    }
+
+    .btn-ghost {
+      background: rgba(250, 204, 21, 0.09);
+      border-color: rgba(250, 204, 21, 0.4);
+      color: var(--accent);
+    }
+
+    .field {
+      margin-top: 12px;
       display: flex;
       flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0d0b16;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .auth-error {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--danger);
+      min-height: 16px;
+      text-align: center;
+    }
+
+    /* ==================== ОСНОВНОЙ ИНТЕРФЕЙС ==================== */
+    #appScreen {
+      display: none;
+      padding-bottom: 155px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 15;
+      background: rgba(12, 14, 20, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 10px;
     }
 
-    .game-tag {
-      font-size: 11px;
+    .topbar-brand {
+      font-weight: 900;
+      font-size: 16px;
       color: var(--accent);
-      font-weight: 700;
-      text-transform: uppercase;
     }
 
-    .item-title {
-      font-size: 15px;
-      font-weight: 700;
-      margin-top: 3px;
-      line-height: 1.25;
-    }
-
-    .item-desc {
+    .topbar-user {
       font-size: 12px;
       color: var(--muted);
-      margin-top: 4px;
-      line-height: 1.35;
-    }
-
-    .price {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--neon);
-    }
-
-    .qty-controls {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 6px;
     }
 
-    .btn-add {
-      width: 100%;
-      padding: 9px 10px;
-      border: none;
-      border-radius: 10px;
-      background: var(--card-2);
-      color: var(--text);
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      border: 1px solid var(--border);
+    .container {
+      padding: 14px 16px;
+      max-width: 680px;
+      margin: 0 auto;
     }
 
-    .btn-add:hover {
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .center-msg {
+      text-align: center;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .section-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .menu-btn {
+      padding: 12px;
+      border-radius: 13px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .menu-btn:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
 
-    .stepper {
+    .menu-btn.wide {
+      grid-column: 1 / -1;
+    }
+
+    .price-list {
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .price-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 100%;
-      background: var(--card-2);
-      border-radius: 10px;
-      border: 1px solid var(--accent);
-      overflow: hidden;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      padding: 11px 13px;
     }
 
-    .stepper button {
-      width: 34px;
-      height: 34px;
-      border: none;
-      background: transparent;
-      color: var(--accent);
-      font-size: 17px;
+    .price-name {
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .price-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .old-price {
+      text-decoration: line-through;
+      color: var(--danger);
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
+    .new-price {
+      color: var(--neon);
       font-weight: 800;
+      font-size: 14px;
+    }
+
+    .mini-btn {
+      padding: 7px 11px;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent);
+      color: #090a0f;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .choice-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 11px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin: 4px 4px 0 0;
+    }
+
+    .choice-chip.active {
+      background: rgba(250, 204, 21, 0.18);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .msg-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
       cursor: pointer;
     }
 
-    .stepper span {
-      font-size: 13px;
-      font-weight: 700;
+    .msg-card.unread {
+      border-color: var(--accent);
+      box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
     }
 
-    .checkout-bar {
+    .profile-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 9px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #090a0f;
+      border-color: var(--accent);
+    }
+
+    /* ==================== ОБУЧАЛКА СО ШКИПЕРОМ ==================== */
+    #skipperTutorial {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 78px;
+      z-index: 60;
+      display: none;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    #skipperTutorial.active {
+      display: flex;
+    }
+
+    .skipper-bubble {
+      background: #1b1530;
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.4;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
+      pointer-events: auto;
+      max-width: 100%;
+    }
+
+    .skipper-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .skipper-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: var(--accent);
+      color: #090a0f;
+      border: 2px solid #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .skipper-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .tutorial-highlight {
+      position: relative;
+      z-index: 65 !important;
+      outline: 3px solid var(--highlight) !important;
+      box-shadow: 0 0 0 6px rgba(250, 204, 21, 0.28), 0 0 24px rgba(250, 204, 21, 0.85) !important;
+      animation: pulseGlow 1.1s infinite alternate;
+    }
+
+    @keyframes pulseGlow {
+      from {
+        transform: scale(1);
+      }
+      to {
+        transform: scale(1.02);
+      }
+    }
+
+    /* ==================== НИЖНЕЕ МЕНЮ (8 КНОПОК) ==================== */
+    .bottom-nav {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(21, 25, 33, 0.96);
-      backdrop-filter: blur(10px);
+      z-index: 40;
+      background: rgba(11, 13, 19, 0.97);
+      backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
-      padding: 12px 16px;
-      display: none;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      padding: 6px 2px;
     }
 
-    .checkout-bar.visible {
+    .nav-item {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 4px 1px;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+
+    .nav-item svg {
+      width: 17px;
+      height: 17px;
+      stroke: #ffffff;
+      fill: none;
+      stroke-width: 2;
+      flex-shrink: 0;
+    }
+
+    .nav-item span {
+      font-size: 8.5px;
+      font-weight: 700;
+      line-height: 1.05;
+      text-align: center;
+      color: #ffffff;
+      word-break: break-word;
+    }
+
+    .nav-item.active svg {
+      stroke: var(--accent);
+    }
+
+    .nav-item.active span {
+      color: var(--accent);
+    }
+
+    /* Модалка оплаты и подтверждения */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.72);
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-backdrop.open {
       display: flex;
     }
 
-    .method-select {
+    .modal-card {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      font-size: 13px;
-    }
-
-    .checkout-btn {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 12px;
-      background: var(--accent);
-      color: #0c0e12;
-      font-size: 14px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .checkout-btn:hover {
-      background: var(--accent-hover);
+      max-width: 410px;
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      border-radius: 18px;
+      padding: 18px;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="brand-row">
-      <div class="brand">⚡ NORMALBLOX STORE</div>
-      <div class="badge">ГАРАНТИЯ</div>
+
+  <!-- ==================== 1. ЭКРАН АВТОРИЗАЦИИ ==================== -->
+  <div id="authScreen">
+    <div class="diagonal-beam"></div>
+    <div class="auth-box" id="authBox">
+      <div class="auth-title">ДОБРО ПОЖАЛОВАТЬ</div>
+      <div class="auth-sub">
+        В магазин <b>NORMALBLOX STORE</b> и пространство <b>NormalFunk</b>. Выбери способ входа, чтобы продолжить.
+      </div>
+      <div class="auth-actions">
+        <button class="btn btn-yellow" onclick="openAuthForm('register')">ЗАРЕГЕСТРИРОВАТЬСЯ</button>
+        <button class="btn" onclick="openAuthForm('login')">ВОЙТИ</button>
+        <button class="btn btn-ghost" onclick="openAuthForm('guest')">ПРОДОЛЖИТЬ КАК ГОСТЬ</button>
+      </div>
+      <div class="auth-error" id="authError"></div>
     </div>
-    <div class="subtitle" id="greeting">Выбирай пак и оформляй заказ в пару кликов</div>
-    <div class="payments">💳 Оплата: Humo · UzCard · Payme · Uzum Bank · Наличные</div>
   </div>
 
-  <div class="tabs" id="tabs"></div>
-  <div class="grid" id="catalog"></div>
+  <!-- ==================== 2. ОСНОВНОЕ ПРИЛОЖЕНИЕ ==================== -->
+  <div id="appScreen">
+    <div class="topbar">
+      <div class="topbar-brand">⚡ NORMALBLOX STORE</div>
+      <div class="topbar-user" id="topbarUser"></div>
+    </div>
 
-  <div class="checkout-bar" id="checkoutBar">
-    <select class="method-select" id="paymentMethod">
-      <option value="Humo">Способ оплаты: Humo</option>
-      <option value="UzCard">Способ оплаты: UzCard</option>
-      <option value="Payme">Способ оплаты: Payme</option>
-      <option value="Uzum Bank">Способ оплаты: Uzum Bank</option>
-      <option value="Наличные">Способ оплаты: Наличные</option>
-    </select>
-    <button class="checkout-btn" id="checkoutBtn" onclick="sendOrder()">Оформить заказ</button>
+    <div class="container" id="viewContainer"></div>
+
+    <!-- Обучалка со Шкипером -->
+    <div id="skipperTutorial">
+      <div class="skipper-bubble" id="skipperBubble"></div>
+      <div class="skipper-row">
+        <div class="skipper-avatar" id="skipperAvatar">
+          <img src="skipper.png" alt="Шкипер" onerror="this.style.display='none'; this.parentNode.textContent='ШКИПЕР';" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Модальное окно оформления / оплаты -->
+    <div class="modal-backdrop" id="checkoutModal">
+      <div class="modal-card">
+        <div class="section-title" id="modalTitle">Оформление заказа</div>
+        <div class="muted" id="modalDesc" style="margin-bottom: 10px;"></div>
+        <div class="field" id="paymentFieldBox">
+          <label>Способ оплаты</label>
+          <select id="paymentSelect">
+            <option value="">— Выберите способ оплаты —</option>
+            <option value="Humo">Humo</option>
+            <option value="UzCard">UzCard</option>
+            <option value="Payme">Payme</option>
+            <option value="Uzum Bank">Uzum Bank</option>
+            <option value="Наличные">Наличные</option>
+          </select>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 14px;">
+          <button class="btn" onclick="closeCheckoutModal()">Отмена</button>
+          <button class="btn btn-yellow" id="confirmOrderBtn" onclick="confirmOrder()">Купить</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Нижнее меню из 8 кнопок с белыми иконками -->
+    <nav class="bottom-nav" id="bottomNav">
+      <button class="nav-item active" data-nav="home" onclick="navigate('home')">
+        <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/></svg>
+        <span>ГЛАВНАЯ</span>
+      </button>
+
+      <button class="nav-item" id="navShopBtn" data-nav="shop" onclick="navigate('shop')">
+        <svg viewBox="0 0 24 24"><path d="M6 7h12l-1 12H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+        <span>МАГАЗИН</span>
+      </button>
+
+      <button class="nav-item" id="navMessagesBtn" data-nav="messages" onclick="navigate('messages')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>СООБЩЕНИЯ</span>
+      </button>
+
+      <button class="nav-item" data-nav="other" onclick="navigate('other')">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <span>ДРУГОЕ</span>
+      </button>
+
+      <button class="nav-item" data-nav="team" onclick="navigate('team')">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>ВСТУПИТЬ В КОМАНДУ</span>
+      </button>
+
+      <button class="nav-item" data-nav="about" onclick="navigate('about')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span>О НАС / О БОТЕ</span>
+      </button>
+
+      <button class="nav-item" data-nav="feedback" onclick="navigate('feedback')">
+        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        <span>БАГИ / ИДЕИ</span>
+      </button>
+
+      <button class="nav-item" data-nav="profile" onclick="navigate('profile')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>ПРОФИЛЬ</span>
+      </button>
+    </nav>
   </div>
 
   <script>
+    /* ==================== НАСТРОЙКИ ОТПРАВКИ В TELEGRAM ==================== */
+    // Чтобы заявки и покупки прилетали прямо в твоего бота с ссылкой на чат пользователя,
+    // впиши сюда токен бота и свой Telegram chat_id (или оставь пустыми для открытия чата @Normal_Funk).
+    const BOT_TOKEN = "";
+    const ADMIN_CHAT_ID = "";
     const ADMIN_USERNAME = "Normal_Funk";
-    const CURRENCY = "сум";
-
-    const CATEGORIES = [
-      "Все",
-      "Roblox",
-      "Brainrot",
-      "Brawl Stars",
-      "FC Mobile",
-      "Standoff 2"
-    ];
-
-    const PRODUCTS = [
-      { id: 1, game: "Roblox", title: "100 Robux", desc: "Быстрая выдача", price: 25000 },
-      { id: 2, game: "Roblox", title: "400 Robux", desc: "Популярный пак", price: 90000 },
-      { id: 3, game: "Roblox", title: "800 Robux", desc: "Выгодный набор", price: 170000 },
-      { id: 4, game: "Brainrot", title: "Стартовый пак", desc: "Предметы / буст", price: 30000 },
-      { id: 5, game: "Brainrot", title: "VIP пак", desc: "Редкие позиции", price: 65000 },
-      { id: 6, game: "Brawl Stars", title: "30 Гемов", desc: "На аккаунт", price: 25000 },
-      { id: 7, game: "Brawl Stars", title: "80 Гемов", desc: "Популярный пак", price: 60000 },
-      { id: 8, game: "FC Mobile", title: "520 FC Points", desc: "Для состава", price: 75000 },
-      { id: 9, game: "FC Mobile", title: "1070 FC Points", desc: "Большой набор", price: 145000 },
-      { id: 10, game: "Standoff 2", title: "100 Голды", desc: "Быстрая передача", price: 22000 },
-      { id: 11, game: "Standoff 2", title: "500 Голды", desc: "Выгодный пак", price: 100000 }
-    ];
-
-    let activeCategory = "Все";
-    const cart = {};
 
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) {
       tg.ready();
       tg.expand();
-      const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
-      if (user && user.first_name) {
-        document.getElementById("greeting").textContent =
-          `Привет, ${user.first_name}! Выбирай пак и оформляй заказ`;
+    }
+
+    const tgUser = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || null;
+
+    /* ==================== ФОРМУЛА ЦЕНЫ (+40% И ОКРУГЛЕНИЕ ДО 1000) ==================== */
+    function markupPrice(baseSum) {
+      const withMarkup = baseSum * 1.4;
+      return Math.round(withMarkup / 1000) * 1000;
+    }
+
+    function fmtSum(val) {
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
+    }
+
+    // Базовые цены в сумах (из скриншотов 2, 4, 5, 6, 8, 9), пересчитанные по формуле +40% с округлением до 1000:
+    const SHOP_DATA = {
+      roblox: [
+        { name: "40 Robux", base: 15000 },
+        { name: "80 Robux", base: 25000 },
+        { name: "120 Robux", base: 45000 },
+        { name: "400 Robux", base: 90000 },
+        { name: "800 Robux", base: 150000 },
+        { name: "1700 Robux", base: 270000 }
+      ],
+      bsGems: [
+        { name: "30 Gems", base: 25000 },
+        { name: "80 Gems", base: 60000 },
+        { name: "170 Gems", base: 100000 },
+        { name: "360 Gems", base: 170000 },
+        { name: "950 Gems", base: 400000 },
+        { name: "2000 Gems", base: 760000 }
+      ],
+      bsPass: [
+        { name: "Brawl Pass", base: 90000 },
+        { name: "Brawl Pass Plus", base: 130000 },
+        { name: "PRO Pass", base: 200000 }
+      ],
+      fcPoints: [
+        { name: "40 FC Points", base: 25000 },
+        { name: "100 FC Points", base: 55000 },
+        { name: "500 FC Points", base: 125000 },
+        { name: "1000 FC Points", base: 230000 },
+        { name: "2000 FC Points", base: 380000 },
+        { name: "5000 FC Points", base: 900000 },
+        { name: "10000 FC Points", base: 1750000 }
+      ],
+      so2Pass: [
+        { name: "Gold Pass", base: 210000 },
+        { name: "Gold Pass + 10 УРОВНЕЙ", base: 330000 }
+      ],
+      so2Gold: [
+        { name: "100 Gold", base: 75000, oldBase: null },
+        { name: "500 Gold", base: 150000, oldBase: 180000 },
+        { name: "1000 Gold", base: 250000, oldBase: 330000 },
+        { name: "3000 Gold", base: 500000, oldBase: 900000 }
+      ]
+    };
+
+    const BRAINROT_MUTATIONS = [
+      "⚪️ Normal",
+      "🟡 Gold",
+      "🌈 Rainbow",
+      "💎 Diamond",
+      "😇 Divine",
+      "🤖 Cyber",
+      "🔮 Crystal",
+      "☢️ Radioactive",
+      "👻 Phantom",
+      "🌌 Galaxy",
+      "🍬 Candy",
+      "☯️ Yin-Yang",
+      "🩸 Bloodrot",
+      "🌋 Magma",
+      "❄️ Frozen",
+      "⚡ Shocked",
+      "🌀 Void"
+    ];
+
+    /* ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ==================== */
+    let currentUser = null;
+    let currentNav = "home";
+    let shopSubView = "menu"; // menu | roblox | bsMenu | bsGems | bsPass | fc | so2Menu | so2Pass | so2Gold | brainrot | brainrotQuiz | reviews
+    let otherSubView = "menu"; // menu | ads | collab | partner
+    let profileTab = "orders"; // orders | rating
+
+    // Обучалка:
+    // 0 - не активна
+    // 1 - ждём нажатия на кнопку МАГАЗИН
+    // 2 - в магазине, ждём нажатия на ОБУЧЕНИЕ / КУПИТЬ
+    // 3 - открыто окно оплаты, ждём выбор способа оплаты
+    // 4 - перекинуло в СООБЩЕНИЯ, Шкипер рассказывает про сообщения с продавцом, ждём прихода сообщения
+    // 5 - пришло сообщение от продавца, ждём нажатия на подсвеченную рамку сообщения
+    // 6 - открыт чат с поздравлением и кнопкой ЗАВЕРШИТЬ ОБУЧЕНИЕ
+    let tutorialStep = 0;
+    let tutorialSellerMsgArrived = false;
+    let tutorialSellerMsgRead = false;
+
+    let pendingOrder = null;
+    let tempRegData = {};
+
+    // Состояние опроса в команду
+    let teamForm = {
+      discord: "",
+      roles: [],
+      games: [],
+      device: "",
+      portfolio: ""
+    };
+
+    // Состояние опроса по Брейнроту
+    let brainrotForm = {
+      name: "",
+      mutation: "",
+      buff: ""
+    };
+
+    /* ==================== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ==================== */
+    function loadUsersDB() {
+      try {
+        return JSON.parse(localStorage.getItem("nf_users_db") || "[]");
+      } catch {
+        return [];
       }
     }
 
-    function formatPrice(num) {
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " " + CURRENCY;
+    function saveUsersDB(list) {
+      localStorage.setItem("nf_users_db", JSON.stringify(list));
     }
 
-    function renderTabs() {
-      const tabsEl = document.getElementById("tabs");
-      tabsEl.innerHTML = "";
-      CATEGORIES.forEach((cat) => {
-        const btn = document.createElement("button");
-        btn.className = "tab" + (cat === activeCategory ? " active" : "");
-        btn.textContent = cat;
-        btn.onclick = () => {
-          activeCategory = cat;
-          renderTabs();
-          renderCatalog();
-        };
-        tabsEl.appendChild(btn);
-      });
-    }
-
-    function changeQty(id, delta) {
-      const next = (cart[id] || 0) + delta;
-      if (next <= 0) {
-        delete cart[id];
-      } else {
-        cart[id] = next;
+    function loadOrders() {
+      try {
+        return JSON.parse(localStorage.getItem("nf_orders") || "[]");
+      } catch {
+        return [];
       }
-      renderCatalog();
-      updateCheckoutBar();
     }
 
-    function renderCatalog() {
-      const catalogEl = document.getElementById("catalog");
-      catalogEl.innerHTML = "";
+    function saveOrders(list) {
+      localStorage.setItem("nf_orders", JSON.stringify(list));
+    }
 
-      const list = activeCategory === "Все"
-        ? PRODUCTS
-        : PRODUCTS.filter((item) => item.game === activeCategory);
+    function loadMessages() {
+      try {
+        return JSON.parse(localStorage.getItem("nf_messages") || "[]");
+      } catch {
+        return [];
+      }
+    }
 
-      list.forEach((item) => {
-        const qty = cart[item.id] || 0;
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <div>
-            <div class="game-tag">${item.game}</div>
-            <div class="item-title">${item.title}</div>
-            <div class="item-desc">${item.desc}</div>
+    function saveMessages(list) {
+      localStorage.setItem("nf_messages", JSON.stringify(list));
+    }
+
+    /* ==================== АВТОРИЗАЦИЯ ==================== */
+    function openAuthForm(mode) {
+      const box = document.getElementById("authBox");
+      if (mode === "register") {
+        box.innerHTML = `
+          <div class="auth-title">РЕГИСТРАЦИЯ</div>
+          <div class="auth-sub">Укажи почту, пароль и свой видимый ник.</div>
+          <div class="field">
+            <label>Почта</label>
+            <input type="email" id="regEmail" placeholder="name@example.com" />
           </div>
-          <div>
-            <div class="price">${formatPrice(item.price)}</div>
-            <div class="qty-controls" style="margin-top: 8px;">
-              ${
-                qty === 0
-                  ? `<button class="btn-add" onclick="changeQty(${item.id}, 1)">+ В корзину</button>`
-                  : `<div class="stepper">
-                       <button onclick="changeQty(${item.id}, -1)">−</button>
-                       <span>${qty} шт.</span>
-                       <button onclick="changeQty(${item.id}, 1)">+</button>
-                     </div>`
-              }
-            </div>
+          <div class="field">
+            <label>Пароль</label>
+            <input type="password" id="regPass" placeholder="Минимум 4 символа" />
           </div>
+          <div class="field">
+            <label>Ваш НИК (будет виден всем)</label>
+            <input type="text" id="regNick" placeholder="Например: NormalFunk" />
+          </div>
+          <div style="display:flex; gap:8px; margin-top:16px;">
+            <button class="btn" onclick="resetAuthStart()">Назад</button>
+            <button class="btn btn-yellow" onclick="submitRegStep1()">ПРОДОЛЖИТЬ</button>
+          </div>
+          <div class="auth-error" id="authError"></div>
         `;
-        catalogEl.appendChild(card);
-      });
+      } else if (mode === "login") {
+        box.innerHTML = `
+          <div class="auth-title">ВХОД</div>
+          <div class="auth-sub">Введите почту и пароль от аккаунта.</div>
+          <div class="field">
+            <label>Почта</label>
+            <input type="email" id="loginEmail" placeholder="name@example.com" />
+          </div>
+          <div class="field">
+            <label>Пароль</label>
+            <input type="password" id="loginPass" placeholder="Ваш пароль" />
+          </div>
+          <div style="display:flex; gap:8px; margin-top:16px;">
+            <button class="btn" onclick="resetAuthStart()">Назад</button>
+            <button class="btn btn-yellow" onclick="submitLogin()">ВОЙТИ</button>
+          </div>
+          <div class="auth-error" id="authError"></div>
+        `;
+      } else {
+        const defaultTg = tgUser && tgUser.username ? `@${tgUser.username}` : "@";
+        const defaultNick = tgUser && tgUser.first_name ? tgUser.first_name : "";
+        box.innerHTML = `
+          <div class="auth-title">РЕЖИМ ГОСТЯ</div>
+          <div class="auth-sub">Укажите только ник в Telegram (через @) и видимый ник.</div>
+          <div class="field">
+            <label>Ник в ТГ (через @)</label>
+            <input type="text" id="guestTg" value="${defaultTg}" placeholder="@username" />
+          </div>
+          <div class="field">
+            <label>Ваш НИК (будет виден)</label>
+            <input type="text" id="guestNick" value="${defaultNick}" placeholder="Ваш ник" />
+          </div>
+          <div style="display:flex; gap:8px; margin-top:16px;">
+            <button class="btn" onclick="resetAuthStart()">Назад</button>
+            <button class="btn btn-yellow" onclick="submitGuest()">ПРОДОЛЖИТЬ</button>
+          </div>
+          <div class="auth-error" id="authError"></div>
+        `;
+      }
     }
 
-    function updateCheckoutBar() {
-      const bar = document.getElementById("checkoutBar");
-      const btn = document.getElementById("checkoutBtn");
+    function resetAuthStart() {
+      document.getElementById("authBox").innerHTML = `
+        <div class="auth-title">ДОБРО ПОЖАЛОВАТЬ</div>
+        <div class="auth-sub">
+          В магазин <b>NORMALBLOX STORE</b> и пространство <b>NormalFunk</b>. Выбери способ входа, чтобы продолжить.
+        </div>
+        <div class="auth-actions">
+          <button class="btn btn-yellow" onclick="openAuthForm('register')">ЗАРЕГЕСТРИРОВАТЬСЯ</button>
+          <button class="btn" onclick="openAuthForm('login')">ВОЙТИ</button>
+          <button class="btn btn-ghost" onclick="openAuthForm('guest')">ПРОДОЛЖИТЬ КАК ГОСТЬ</button>
+        </div>
+        <div class="auth-error" id="authError"></div>
+      `;
+    }
 
-      let totalCount = 0;
-      let totalSum = 0;
+    function submitRegStep1() {
+      const email = document.getElementById("regEmail").value.trim();
+      const pass = document.getElementById("regPass").value.trim();
+      const nick = document.getElementById("regNick").value.trim();
+      const err = document.getElementById("authError");
 
-      for (const [id, qty] of Object.entries(cart)) {
-        const item = PRODUCTS.find((p) => p.id === Number(id));
-        if (item) {
-          totalCount += qty;
-          totalSum += item.price * qty;
-        }
-      }
-
-      if (totalCount === 0) {
-        bar.classList.remove("visible");
+      if (!email || !pass || !nick) {
+        err.textContent = "Заполните почту, пароль и ник.";
         return;
       }
 
-      bar.classList.add("visible");
-      btn.textContent = `Оформить (${totalCount} шт.) · ${formatPrice(totalSum)}`;
+      tempRegData = { email, pass, nick };
+      const preTg = tgUser && tgUser.username ? `@${tgUser.username}` : "@";
+
+      document.getElementById("authBox").innerHTML = `
+        <div class="auth-title">ПОЧТИ ГОТОВО</div>
+        <div class="auth-sub">Укажите свой ник в Telegram (через @), чтобы мы могли связаться с вами.</div>
+        <div class="field">
+          <label>Ник в ТГ (через @)</label>
+          <input type="text" id="regTg" value="${preTg}" placeholder="@username" />
+        </div>
+        <div style="display:flex; gap:8px; margin-top:16px;">
+          <button class="btn" onclick="openAuthForm('register')">Назад</button>
+          <button class="btn btn-yellow" onclick="finishRegistration()">ЗАВЕРШИТЬ</button>
+        </div>
+        <div class="auth-error" id="authError"></div>
+      `;
     }
 
-    function sendOrder() {
-      const lines = [];
-      let totalSum = 0;
-
-      for (const [id, qty] of Object.entries(cart)) {
-        const item = PRODUCTS.find((p) => p.id === Number(id));
-        if (item) {
-          const sum = item.price * qty;
-          totalSum += sum;
-          lines.push(`• [${item.game}] ${item.title} x${qty} — ${formatPrice(sum)}`);
-        }
+    function finishRegistration() {
+      let tgHandle = document.getElementById("regTg").value.trim();
+      const err = document.getElementById("authError");
+      if (!tgHandle.startsWith("@") || tgHandle.length < 2) {
+        err.textContent = "Введите ник в ТГ через @ (например, @nikita).";
+        return;
       }
 
-      if (!lines.length) return;
+      const db = loadUsersDB();
+      const userObj = {
+        mode: "registered",
+        email: tempRegData.email,
+        pass: tempRegData.pass,
+        nick: tempRegData.nick,
+        tgUsername: tgHandle,
+        tgId: tgUser ? tgUser.id : null,
+        avatar: tgUser && tgUser.photo_url ? tgUser.photo_url : "",
+        fastPayerScore: "Новый покупатель (оценка формируется)"
+      };
+      db.push(userObj);
+      saveUsersDB(db);
+      enterApp(userObj);
+    }
 
-      const method = document.getElementById("paymentMethod").value;
-      const buyer = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
-        ? `@${tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.id}`
-        : "покупатель";
+    function submitLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const pass = document.getElementById("loginPass").value.trim();
+      const err = document.getElementById("authError");
+
+      const db = loadUsersDB();
+      const found = db.find((u) => u.email === email && u.pass === pass);
+      if (!found) {
+        err.textContent = "Неверная почта или пароль.";
+        return;
+      }
+      enterApp(found);
+    }
+
+    function submitGuest() {
+      const tgHandle = document.getElementById("guestTg").value.trim();
+      const nick = document.getElementById("guestNick").value.trim();
+      const err = document.getElementById("authError");
+
+      if (!tgHandle.startsWith("@") || tgHandle.length < 2) {
+        err.textContent = "Укажите ник в ТГ через @.";
+        return;
+      }
+      if (!nick) {
+        err.textContent = "Укажите ваш НИК.";
+        return;
+      }
+
+      const guestObj = {
+        mode: "guest",
+        nick,
+        tgUsername: tgHandle,
+        tgId: tgUser ? tgUser.id : null,
+        avatar: tgUser && tgUser.photo_url ? tgUser.photo_url : "",
+        fastPayerScore: "Гость • Наблюдение за оплатами"
+      };
+      enterApp(guestObj);
+    }
+
+    function enterApp(userObj) {
+      currentUser = userObj;
+      document.getElementById("authScreen").style.display = "none";
+      document.getElementById("appScreen").style.display = "block";
+      document.getElementById("topbarUser").innerHTML =
+        `<b>${escapeHtml(userObj.nick)}</b> <span>${escapeHtml(userObj.tgUsername)}</span>`;
+
+      startTutorial();
+      renderCurrentView();
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      tutorialStep = 0;
+      document.getElementById("skipperTutorial").classList.remove("active");
+      clearHighlights();
+      document.getElementById("appScreen").style.display = "none";
+      document.getElementById("authScreen").style.display = "flex";
+      resetAuthStart();
+    }
+
+    /* ==================== ОБУЧАЛКА СО ШКИПЕРОМ ==================== */
+    function startTutorial() {
+      tutorialStep = 1;
+      tutorialSellerMsgArrived = false;
+      tutorialSellerMsgRead = false;
+      updateTutorialUI();
+    }
+
+    function updateTutorialUI() {
+      const box = document.getElementById("skipperTutorial");
+      const bubble = document.getElementById("skipperBubble");
+      clearHighlights();
+
+      if (tutorialStep === 0) {
+        box.classList.remove("active");
+        return;
+      }
+
+      box.classList.add("active");
+
+      if (tutorialStep === 1) {
+        bubble.textContent = "ЧТО-БЫ КУПИТЬ ЧТО-ТО ТО НАЖМИТЕ НА КНОПКУ МАГАЗИН";
+        const shopBtn = document.getElementById("navShopBtn");
+        if (shopBtn) shopBtn.classList.add("tutorial-highlight");
+      } else if (tutorialStep === 2) {
+        bubble.textContent = "ЗДЕСЬ ТЫ МОЖЕШЬ ВЫБРАТЬ КАТЕГОРИЮ ДЛЯ ДОНАТА, ДАВАЙ ЧТО-ТО ЗАКАЖЕМ.";
+        const buyBtn = document.getElementById("tutorialBuyBtn");
+        if (buyBtn) buyBtn.classList.add("tutorial-highlight");
+      } else if (tutorialStep === 3) {
+        bubble.textContent = "ОБЯЗАТЕЛЬНО КОГДА ЧТО-ТО ПОКУПАЕШЬ ТО ВЫБИРАЙ СПОСОБ ОПЛАТЫ. СЕЙЧАС ВЫБЕРИ ЛЮБОЙ СПОСОБ ОПЛАТЫ (ДЕНЬГИ ЗАБИРАТЬ НЕ БУДЕМ).";
+        const payBox = document.getElementById("paymentSelect");
+        if (payBox) payBox.classList.add("tutorial-highlight");
+      } else if (tutorialStep === 4) {
+        bubble.textContent = "ЗДЕСЬ НАХОДЯТСЯ ВСЕ СООБЩЕНИЯ С ПРОДАВЦОМ.";
+        if (!tutorialSellerMsgArrived) {
+          setTimeout(() => {
+            if (tutorialStep === 4) {
+              tutorialSellerMsgArrived = true;
+              const msgs = loadMessages();
+              msgs.unshift({
+                id: "tut-seller-1",
+                sender: "Продавец NormalFunk",
+                preview: "Привет! Заказ по обучению принят, загляни в чат!",
+                fullText: "ПОЗДРАВЛЯЮ!!! ТЫ ПРОШЁЛ ОБУЧЕНИЕ",
+                isTutorialFinal: true,
+                unread: true,
+                time: "только что"
+              });
+              saveMessages(msgs);
+              tutorialStep = 5;
+              if (currentNav === "messages") renderCurrentView();
+              updateTutorialUI();
+            }
+          }, 1400);
+        }
+      } else if (tutorialStep === 5) {
+        bubble.textContent = "ТЕБЕ НАПИСАЛ ПРОДОВЕЦ, ТЕПЕРЬ ПЕРЕЙДИ К НИМУ В ЧАТ";
+        const unreadCard = document.querySelector(".msg-card.unread");
+        if (unreadCard) unreadCard.classList.add("tutorial-highlight");
+      } else if (tutorialStep === 6) {
+        bubble.textContent = "Нажми «ЗАВЕРШИТЬ ОБУЧЕНИЕ» внизу сообщения, чтобы перейти на ГЛАВНУЮ.";
+      }
+    }
+
+    function clearHighlights() {
+      document.querySelectorAll(".tutorial-highlight").forEach((el) => {
+        el.classList.remove("tutorial-highlight");
+      });
+    }
+
+    function finishTutorial() {
+      tutorialStep = 0;
+      clearHighlights();
+      document.getElementById("skipperTutorial").classList.remove("active");
+      navigate("home");
+    }
+
+    /* ==================== НАВИГАЦИЯ ==================== */
+    function navigate(navName) {
+      currentNav = navName;
+      if (navName === "shop") shopSubView = "menu";
+      if (navName === "other") otherSubView = "menu";
+
+      document.querySelectorAll(".nav-item").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.nav === navName);
+      });
+
+      if (tutorialStep === 1 && navName === "shop") {
+        tutorialStep = 2;
+      } else if (tutorialStep === 4 && navName === "messages") {
+        // шаг 4 остаётся, пока не придёт сообщение (через 1.4 сек станет шагом 5)
+      }
+
+      renderCurrentView();
+      updateTutorialUI();
+    }
+
+    function renderCurrentView() {
+      const container = document.getElementById("viewContainer");
+
+      if (currentNav === "home") {
+        container.innerHTML = renderHomeView();
+      } else if (currentNav === "shop") {
+        container.innerHTML = renderShopView();
+      } else if (currentNav === "messages") {
+        container.innerHTML = renderMessagesView();
+      } else if (currentNav === "other") {
+        container.innerHTML = renderOtherView();
+      } else if (currentNav === "team") {
+        container.innerHTML = renderTeamView();
+      } else if (currentNav === "about") {
+        container.innerHTML = renderAboutView();
+      } else if (currentNav === "feedback") {
+        container.innerHTML = renderFeedbackView();
+      } else if (currentNav === "profile") {
+        container.innerHTML = renderProfileView();
+      }
+    }
+
+    /* ==================== 1. ГЛАВНАЯ ==================== */
+    function renderHomeView() {
+      const orders = loadOrders();
+      return `
+        <div class="panel center-msg">
+          <div class="section-title">👋 Привет, ${escapeHtml(currentUser.nick)}!</div>
+          <p class="muted">
+            Добро пожаловать в пространство <b>NormalFunk</b> и магазин <b>NORMALBLOX STORE</b>.
+            Здесь можно быстро оформить донат, подать заявку в команду или связаться с администрацией.
+          </p>
+          <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+            <button class="btn btn-yellow" style="flex:1" onclick="navigate('shop')">🛒 Перейти в магазин</button>
+            <button class="btn" style="flex:1" onclick="startTutorial()">🎓 Пройти обучение заново</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title">🔥 Быстрый старт</div>
+          <div class="price-row">
+            <div>
+              <div class="price-name">Roblox • 400 Robux</div>
+              <div class="price-sub">Популярный пак</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="new-price">${fmtSum(markupPrice(90000))}</span>
+              <button class="mini-btn" onclick="openOrderModal('Roblox', '400 Robux', ${markupPrice(90000)})">Купить</button>
+            </div>
+          </div>
+          <div class="price-row" style="margin-top:8px;">
+            <div>
+              <div class="price-name">Brawl Stars • Brawl Pass</div>
+              <div class="price-sub">Пропуск сезона</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="new-price">${fmtSum(markupPrice(90000))}</span>
+              <button class="mini-btn" onclick="openOrderModal('Brawl Stars — Brawl Pass', 'Brawl Pass', ${markupPrice(90000)})">Купить</button>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:12px;">
+            Активных заказов в истории: <b>${orders.length}</b> • Владелец: <b>@${ADMIN_USERNAME}</b>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==================== 2. МАГАЗИН ==================== */
+    function renderShopView() {
+      if (shopSubView === "menu") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">✨ ДОБРО ПОЖАЛОВАТЬ В NORMALBLOX STORE! 💎</div>
+            <p>Выбирай свой пак и залетай в игру с полными карманами! 🔥</p>
+            <p style="margin-top:6px;">🛡 <b>Гарантия:</b> Кристальная честность ✨</p>
+            <p style="margin-top:4px;">💳 <b>Способы оплаты:</b> Humo / UzCard / Payme / Uzum Bank / Наличные</p>
+            <p style="margin-top:8px;" class="muted">👇 Выберите игру из меню ниже, чтобы посмотреть цены:</p>
+
+            <div class="menu-grid">
+              <button class="menu-btn" onclick="setShopSub('roblox')">🟩 Roblox (Robux)</button>
+              <button class="menu-btn" onclick="setShopSub('brainrot')">🧠 Купить Brainrot</button>
+              <button class="menu-btn" onclick="setShopSub('bsMenu')">🟨 Brawl Stars</button>
+              <button class="menu-btn" onclick="setShopSub('fc')">🟦 FC Mobile</button>
+              <button class="menu-btn" onclick="setShopSub('so2Menu')">🟧 Standoff 2</button>
+              <button class="menu-btn" onclick="setShopSub('reviews')">💬 Отзывы</button>
+              <button class="menu-btn wide" id="tutorialBuyBtn" onclick="openOrderModal('Обучение', 'Пакет Обучение (0 сум)', 0, true)">
+                🎓 ОБУЧЕНИЕ — 0 сум (Купить)
+              </button>
+              <button class="menu-btn wide" onclick="navigate('home')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shopSubView === "roblox") {
+        return renderPackScreen(
+          "🎮 ROBLOX",
+          "Цены рассчитаны с наценкой +40% и округлением до 1 000 сум:",
+          SHOP_DATA.roblox,
+          "Roblox",
+          "menu"
+        );
+      }
+
+      if (shopSubView === "bsMenu") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">🌵 BRAWL STARS — NORMALBLOX STORE</div>
+            <p class="muted">Выберите нужный товар из списка ниже:</p>
+            <p style="margin-top:6px;">• Гемы (Gems) 💎<br>• Brawl Pass / Brawl Pass Plus 🎟</p>
+            <p class="muted" style="margin-top:6px;">Все сделки проходят быстро и абсолютно безопасно!</p>
+            <div class="menu-grid">
+              <button class="menu-btn" onclick="setShopSub('bsGems')">💎 Гемы</button>
+              <button class="menu-btn" onclick="setShopSub('bsPass')">🎟 Brawl Pass</button>
+              <button class="menu-btn wide" onclick="setShopSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shopSubView === "bsGems") {
+        return renderPackScreen(
+          "💎 BRAWL STARS — ГЕМЫ",
+          "Выбирай свой пак и залетай в игру с полными карманами! 🔥",
+          SHOP_DATA.bsGems,
+          "Brawl Stars — Гемы",
+          "bsMenu"
+        );
+      }
+
+      if (shopSubView === "bsPass") {
+        return renderPackScreen(
+          "🎟 ПОКУПКА BRAWL PASS — NORMALBLOX STORE",
+          "Выбирай нужный пропуск и прокачивай аккаунт на максимум! 🔥",
+          SHOP_DATA.bsPass,
+          "Brawl Stars — Brawl Pass",
+          "bsMenu"
+        );
+      }
+
+      if (shopSubView === "fc") {
+        return renderPackScreen(
+          "⚽ FC MOBILE — NORMALBLOX STORE",
+          "Выбирай свой пак и прокачивай состав мечты! ⚽🔥",
+          SHOP_DATA.fcPoints,
+          "FC Mobile",
+          "menu"
+        );
+      }
+
+      if (shopSubView === "so2Menu") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">🔫 STANDOFF 2 — NORMALBLOX STORE</div>
+            <p class="muted">Что именно ты хочешь приобрести? Выбирай нужную категорию ниже 👇</p>
+            <p style="margin-top:8px; text-align:left;">
+              • ⚡ <b>Голда (Gold)</b> — для покупки крутых скинов и перчаток!<br>
+              • 🎟 <b>Gold Pass</b> — для прокачки пропуска и получения эксклюзивных наград!
+            </p>
+            <div class="menu-grid">
+              <button class="menu-btn" onclick="setShopSub('so2Pass')">🎟 Gold Pass</button>
+              <button class="menu-btn" onclick="setShopSub('so2Gold')">⚡ Голда</button>
+              <button class="menu-btn wide" onclick="setShopSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shopSubView === "so2Pass") {
+        return renderPackScreen(
+          "🎟 ПОКУПКА GOLD PASS STANDOFF 2",
+          "Забирай пропуск и открывай эксклюзивные награды! 🔥",
+          SHOP_DATA.so2Pass,
+          "Standoff 2 — Gold Pass",
+          "so2Menu"
+        );
+      }
+
+      if (shopSubView === "so2Gold") {
+        return renderPackScreen(
+          "⚡ ПОКУПКА GOLD STANDOFF 2",
+          "Забирай голду для топового инвентаря! 🔥",
+          SHOP_DATA.so2Gold,
+          "Standoff 2 — Голда",
+          "so2Menu"
+        );
+      }
+
+      if (shopSubView === "brainrot") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">🧠 ПОКУПКА BRAINROT | NormalBlox Store</div>
+            <p class="muted">
+              Здесь вы можете приобрести валюту, предметы и бусты для Brainrot по выгодным условиям!
+              Чтобы оформить заказ, нажмите «Оформить заказ» и заполните короткий опрос.
+            </p>
+            <div class="menu-grid">
+              <button class="menu-btn wide" style="background:var(--accent); color:#090a0f;" onclick="setShopSub('brainrotQuiz')">🛒 Оформить заказ</button>
+              <button class="menu-btn" onclick="setShopSub('menu')">❌ Отмена</button>
+              <button class="menu-btn" onclick="setShopSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shopSubView === "brainrotQuiz") {
+        return `
+          <div class="panel">
+            <div class="section-title">🧠 Опрос по выбору Брейнрота</div>
+            <div class="field">
+              <label>1. 📝 Укажите название нужного Брейнрота</label>
+              <input type="text" id="brName" value="${escapeHtml(brainrotForm.name)}" placeholder="Например: Tralalero Tralala" />
+            </div>
+
+            <div class="field">
+              <label>2. 🧬 Укажите мутацию Брейнрота</label>
+              <div id="mutationsBox">
+                ${BRAINROT_MUTATIONS.map((m) => `
+                  <button type="button" class="choice-chip ${brainrotForm.mutation === m ? "active" : ""}" onclick="selectMutation('${m.replace(/'/g, "\\'")}')">
+                    ${m}
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+
+            <div class="field">
+              <label>3. ⚡️ Укажите бафф Брейнрота</label>
+              <input type="text" id="brBuff" value="${escapeHtml(brainrotForm.buff)}" placeholder="Например: x2 доход или скорость" />
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <button class="btn" onclick="setShopSub('brainrot')">↩ Назад</button>
+              <button class="btn btn-yellow" onclick="submitBrainrotQuiz()">Отправить заказ</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (shopSubView === "reviews") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">💬 ОТЗЫВЫ NORMALBLOX STORE</div>
+            <p class="muted">
+              Все сделки проводятся прозрачно и с гарантией честности. Чтобы посмотреть актуальные отзывы или оставить свой, напишите владельцу проекта <b>@${ADMIN_USERNAME}</b>.
+            </p>
+            <div class="menu-grid">
+              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">✉️ Написать @${ADMIN_USERNAME}</a>
+              <button class="menu-btn" onclick="setShopSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return "";
+    }
+
+    function renderPackScreen(title, desc, items, categoryLabel, backTarget) {
+      return `
+        <div class="panel">
+          <div class="section-title center-msg">${title}</div>
+          <p class="muted center-msg">${desc}</p>
+          <div class="price-list">
+            ${items.map((it) => {
+              const finalPrice = markupPrice(it.base);
+              const oldHtml = it.oldBase ? `<span class="old-price">${fmtSum(markupPrice(it.oldBase))}</span>` : "";
+              return `
+                <div class="price-row">
+                  <div>
+                    <div class="price-name">${it.name}</div>
+                    <div class="price-sub">База ${fmtSum(it.base)} + 40%</div>
+                  </div>
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <div>${oldHtml}<span class="new-price">${fmtSum(finalPrice)}</span></div>
+                    <button class="mini-btn" onclick="openOrderModal('${categoryLabel}', '${it.name.replace(/'/g, "\\'")}', ${finalPrice})">Купить</button>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+          <div class="menu-grid">
+            <button class="menu-btn" onclick="openOrderModal('${categoryLabel}', 'Свой вариант / Нет подходящей позиции', 0)">❓ Нет подходящей...</button>
+            <button class="menu-btn" onclick="setShopSub('${backTarget}')">↩ Назад</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function setShopSub(sub) {
+      shopSubView = sub;
+      renderCurrentView();
+      updateTutorialUI();
+    }
+
+    function selectMutation(mut) {
+      brainrotForm.mutation = mut;
+      const nameInput = document.getElementById("brName");
+      const buffInput = document.getElementById("brBuff");
+      if (nameInput) brainrotForm.name = nameInput.value;
+      if (buffInput) brainrotForm.buff = buffInput.value;
+      renderCurrentView();
+    }
+
+    function submitBrainrotQuiz() {
+      const name = document.getElementById("brName").value.trim();
+      const buff = document.getElementById("brBuff").value.trim();
+      brainrotForm.name = name;
+      brainrotForm.buff = buff;
+
+      if (!name || !brainrotForm.mutation || !buff) {
+        alert("Заполните название Брейнрота, выберите мутацию и укажите бафф.");
+        return;
+      }
+
+      const payloadText =
+        `🧠 *НОВЫЙ ЗАКАЗ: BRAINROT*\n` +
+        `• Название: ${name}\n` +
+        `• Мутация: ${brainrotForm.mutation}\n` +
+        `• Бафф: ${buff}`;
+
+      recordOrderAndNotify("Brainrot", `${name} (${brainrotForm.mutation})`, "По договорённости", payloadText);
+      brainrotForm = { name: "", mutation: "", buff: "" };
+      setShopSub("menu");
+    }
+
+    /* ==================== ОФОРМЛЕНИЕ ЗАКАЗА И ОПЛАТА ==================== */
+    function openOrderModal(category, itemName, price, isTutorialItem = false) {
+      pendingOrder = { category, itemName, price, isTutorialItem };
+      document.getElementById("modalTitle").textContent = `Покупка: ${itemName}`;
+      document.getElementById("modalDesc").textContent =
+        price === 0
+          ? "Стоимость: 0 сум. Выберите способ оплаты и нажмите «Купить»."
+          : `Категория: ${category} • Итого к оплате: ${fmtSum(price)}.`;
+      document.getElementById("paymentSelect").value = "";
+      document.getElementById("checkoutModal").classList.add("open");
+
+      if (tutorialStep === 2 && isTutorialItem) {
+        tutorialStep = 3;
+        updateTutorialUI();
+      }
+    }
+
+    function closeCheckoutModal() {
+      pendingOrder = null;
+      document.getElementById("checkoutModal").classList.remove("open");
+      if (tutorialStep === 3) {
+        tutorialStep = 2;
+        updateTutorialUI();
+      }
+    }
+
+    function confirmOrder() {
+      if (!pendingOrder) return;
+      const method = document.getElementById("paymentSelect").value;
+      if (!method) {
+        alert("Пожалуйста, выберите способ оплаты.");
+        return;
+      }
+
+      const { category, itemName, price, isTutorialItem } = pendingOrder;
+      const priceStr = price === 0 ? "0 сум (Обучение)" : fmtSum(price);
 
       const text =
-        `Здравствуйте! Хочу сделать заказ в NORMALBLOX STORE:\n\n` +
-        lines.join("\n") +
-        `\n\nИтого: ${formatPrice(totalSum)}` +
-        `\nОплата: ${method}` +
-        `\nОт: ${buyer}`;
+        `🛒 *НОВЫЙ ЗАКАЗ — NORMALBLOX STORE*\n` +
+        `• Раздел: ${category}\n` +
+        `• Товар: ${itemName}\n` +
+        `• Сумма: ${priceStr}\n` +
+        `• Способ оплаты: ${method}`;
 
-      const url = `https://t.me/${ADMIN_USERNAME}?text=${encodeURIComponent(text)}`;
-      if (tg && tg.openTelegramLink) {
-        tg.openTelegramLink(url);
-      } else {
-        window.open(url, "_blank");
+      recordOrderAndNotify(category, itemName, priceStr, text, method);
+      closeCheckoutModal();
+
+      if (tutorialStep === 3 && isTutorialItem) {
+        tutorialStep = 4;
+        navigate("messages");
       }
     }
 
-    renderTabs();
-    renderCatalog();
-    updateCheckoutBar();
+    /* ==================== 3. СООБЩЕНИЯ ==================== */
+    function renderMessagesView() {
+      const msgs = loadMessages();
+      return `
+        <div class="panel">
+          <div class="section-title">💬 СООБЩЕНИЯ</div>
+          <p class="muted">Здесь отображаются сообщения с продавцом и уведомления по заказам.</p>
+          ${
+            msgs.length === 0
+              ? `<div class="msg-card"><div class="muted">Пока сообщений нет. Оформите заказ или пройдите обучение, чтобы увидеть диалог с продавцом.</div></div>`
+              : msgs.map((m) => `
+                  <div class="msg-card ${m.unread ? "unread" : ""}" onclick="openMessageThread('${m.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <b>${escapeHtml(m.sender)}</b>
+                      <span class="muted" style="font-size:11px;">${escapeHtml(m.time)}</span>
+                    </div>
+                    <div style="margin-top:6px; font-size:13px; color:#e2e8f0;">${escapeHtml(m.preview)}</div>
+                    ${m.unread ? `<div style="margin-top:6px; font-size:11px; color:var(--accent); font-weight:800;">● Новое сообщение</div>` : ""}
+                  </div>
+                `).join("")
+          }
+        </div>
+      `;
+    }
+
+    function openMessageThread(msgId) {
+      const msgs = loadMessages();
+      const idx = msgs.findIndex((x) => x.id === msgId);
+      if (idx === -1) return;
+      msgs[idx].unread = false;
+      saveMessages(msgs);
+
+      const item = msgs[idx];
+      if (item.isTutorialFinal && tutorialStep === 5) {
+        tutorialStep = 6;
+        updateTutorialUI();
+      }
+
+      const container = document.getElementById("viewContainer");
+      container.innerHTML = `
+        <div class="panel center-msg">
+          <div class="section-title">${escapeHtml(item.sender)}</div>
+          <p style="margin-top:10px; font-size:16px; font-weight:800; color:var(--accent);">
+            ${escapeHtml(item.fullText)}
+          </p>
+          <div style="margin-top:18px; display:flex; flex-direction:column; gap:8px;">
+            ${
+              item.isTutorialFinal
+                ? `<button class="btn btn-yellow" onclick="finishTutorial()">ЗАВЕРШИТЬ ОБУЧЕНИЕ</button>`
+                : `<a class="btn btn-yellow" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">Открыть чат в Telegram</a>`
+            }
+            <button class="btn" onclick="renderCurrentView()">↩ Назад к сообщениям</button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==================== 4. ДРУГОЕ ==================== */
+    function renderOtherView() {
+      if (otherSubView === "menu") {
+        return `
+          <div class="panel center-msg">
+            <div class="section-title">📌 ИНФОРМАЦИЯ И СВЯЗЬ</div>
+            <p class="muted">
+              В этом разделе вы можете узнать подробнее о проекте NormalFunk, социальных сетях и оформить заявку на сотрудничество.
+              Выберите интересующий вас пункт в меню ниже:
+            </p>
+            <div class="menu-grid">
+              <button class="menu-btn" onclick="setOtherSub('ads')">📢 Реклама</button>
+              <button class="menu-btn" onclick="setOtherSub('partner')">🤝 Сотрудничество</button>
+              <button class="menu-btn" onclick="setOtherSub('collab')">🎬 Коллаборация</button>
+              <button class="menu-btn wide" onclick="navigate('home')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (otherSubView === "ads") {
+        return `
+          <div class="panel">
+            <div class="section-title center-msg">📢 ПОКУПКА РЕКЛАМЫ — NORMALFUNK</div>
+            <p class="muted center-msg">
+              Здесь вы можете заказать рекламу своего Telegram-канала, бота, YouTube-проекта или сервиса.
+            </p>
+            <div style="margin-top:10px; font-size:13px; line-height:1.5;">
+              📊 <b>Наши площадки:</b><br>
+              • Telegram-канал<br>
+              • YouTube<br>
+              • TikTok
+            </div>
+            <div class="field">
+              <label>Форма заявки на рекламу (площадка, ссылка, бюджет)</label>
+              <textarea id="adsText" rows="3" placeholder="Опишите ваш проект и пожелания по размещению..."></textarea>
+            </div>
+            <div class="menu-grid">
+              <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Подать заявку на рекламу', 'adsText')">📝 Подать заявку на рекламу</button>
+              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (otherSubView === "partner") {
+        return `
+          <div class="panel">
+            <div class="section-title center-msg">🤝 СОТРУДНИЧЕСТВО</div>
+            <p class="muted center-msg">
+              Открыты для коммерческих предложений, спонсорства и работы с проектами! ⚡️
+            </p>
+            <div style="margin-top:10px; font-size:13px; line-height:1.5;">
+              📌 <b>Что входит:</b><br>
+              • Рекламные интеграции и совместные акции<br>
+              • Спонсорство турниров и масштабных ивентов<br>
+              • Долгосрочные партнёрские программы
+            </div>
+            <div class="field">
+              <label>Ваше предложение по сотрудничеству</label>
+              <textarea id="partnerText" rows="3" placeholder="Расскажите о проекте и формате партнёрства..."></textarea>
+            </div>
+            <div class="menu-grid">
+              <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Заявка на сотрудничество', 'partnerText')">📝 Подать заявку на сотрудничество</button>
+              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      if (otherSubView === "collab") {
+        return `
+          <div class="panel">
+            <div class="section-title center-msg">🎬 КОЛЛАБОРАЦИЯ</div>
+            <p class="muted center-msg">
+              Ищем креативных авторов, стримеров и блогеров для совместного контента и ивентов! 🔥
+            </p>
+            <div style="margin-top:10px; font-size:13px; line-height:1.5;">
+              📌 <b>Что входит:</b><br>
+              • Совместные стримы, ролики и масштабные розыгрыши<br>
+              • Взаимный пиар и обмен аудиторией<br>
+              • Спец. условия для регулярных интерактивов
+            </div>
+            <div class="field">
+              <label>Идея коллаборации и ссылки на ваши каналы</label>
+              <textarea id="collabText" rows="3" placeholder="Напишите формат совместного ролика или стрима..."></textarea>
+            </div>
+            <div class="menu-grid">
+              <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="sendSimpleRequest('Заявка на коллаборацию', 'collabText')">📝 Подать заявку на коллаборацию</button>
+              <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+              <button class="menu-btn wide" onclick="setOtherSub('menu')">↩ Назад</button>
+            </div>
+          </div>
+        `;
+      }
+
+      return "";
+    }
+
+    function setOtherSub(sub) {
+      otherSubView = sub;
+      renderCurrentView();
+    }
+
+    function sendSimpleRequest(title, textareaId) {
+      const el = document.getElementById(textareaId);
+      const val = el ? el.value.trim() : "";
+      if (!val) {
+        alert("Пожалуйста, заполните текст заявки.");
+        return;
+      }
+      const msg = `📌 *${title}*\n• Сообщение: ${val}`;
+      dispatchToAdmin(title, msg);
+      if (el) el.value = "";
+      alert("Заявка отправлена!");
+    }
+
+    /* ==================== 5. ВСТУПИТЬ В КОМАНДУ ==================== */
+    function renderTeamView() {
+      const rolesList = [
+        "Дизайнер (делать превью)",
+        "Участником команды",
+        "Монтажёром",
+        "Модератор чата"
+      ];
+      const gamesList = ["Roblox", "Standoff 2", "Minecraft", "CS 2", "GTA"];
+
+      return `
+        <div class="panel">
+          <div class="section-title center-msg">👥 НАБОР В КОМАНДУ</div>
+          <p class="muted center-msg">
+            Хочешь стать частью нашего проекта и развиваться вместе с нами? Мы всегда рады активным и ответственным людям! ⚡️
+          </p>
+          <div style="margin-top:10px; font-size:13px; line-height:1.5;">
+            📌 <b>Открытые вакансии:</b><br>
+            • Модератор / Саппорт (помощь пользователям)<br>
+            • Дизайнер / Контент-мейкер (оформление и посты)<br>
+            • Редактор (ведение новостной ленты)<br>
+            ⚠️ <b>Важно:</b> наличие рабочего Discord и возможность находиться в голосе/чате — обязательно!
+          </div>
+
+          <div class="field">
+            <label>1. Какой у тебя ник (Discord) (укажи через @), чтобы можно было связаться?</label>
+            <input type="text" id="teamDiscord" value="${escapeHtml(teamForm.discord)}" placeholder="@your_discord" />
+          </div>
+
+          <div class="field">
+            <label>2. Кем ты хочешь быть? (можно выбрать несколько)</label>
+            <div>
+              ${rolesList.map((r) => `
+                <button type="button" class="choice-chip ${teamForm.roles.includes(r) ? "active" : ""}" onclick="toggleTeamMulti('roles', '${r.replace(/'/g, "\\'")}')">
+                  ${r}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="field">
+            <label>3. В какие игры из тех, что есть на канале (Roblox, Minecraft, CS2, GTA, Standoff 2), ты играешь? (можно выбрать несколько)</label>
+            <div>
+              ${gamesList.map((g) => `
+                <button type="button" class="choice-chip ${teamForm.games.includes(g) ? "active" : ""}" onclick="toggleTeamMulti('games', '${g}')">
+                  ${g}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="field">
+            <label>4. Твои характеристики ПК или мобильного устройства для совместных стримов (выбрать только одно)</label>
+            <div>
+              ${["ПК", "ТЕЛЕФОН"].map((d) => `
+                <button type="button" class="choice-chip ${teamForm.device === d ? "active" : ""}" onclick="selectTeamDevice('${d}')">
+                  ${d}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+
+          <div class="field">
+            <label>5. Ссылки на прошлые работы или примеры монтажа (можно пропустить)</label>
+            <input type="text" id="teamPortfolio" value="${escapeHtml(teamForm.portfolio)}" placeholder="Ссылка на портфолио или видео" />
+          </div>
+
+          <div class="menu-grid">
+            <button class="menu-btn" style="background:var(--accent); color:#090a0f;" onclick="submitTeamForm()">📝 Подать заявку в набор команды</button>
+            <a class="menu-btn" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">💬 Связаться с администрацией</a>
+            <button class="menu-btn wide" onclick="navigate('home')">↩ Назад</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function syncTeamInputs() {
+      const d = document.getElementById("teamDiscord");
+      const p = document.getElementById("teamPortfolio");
+      if (d) teamForm.discord = d.value;
+      if (p) teamForm.portfolio = p.value;
+    }
+
+    function toggleTeamMulti(fieldKey, val) {
+      syncTeamInputs();
+      const arr = teamForm[fieldKey];
+      const idx = arr.indexOf(val);
+      if (idx >= 0) arr.splice(idx, 1);
+      else arr.push(val);
+      renderCurrentView();
+    }
+
+    function selectTeamDevice(dev) {
+      syncTeamInputs();
+      teamForm.device = dev;
+      renderCurrentView();
+    }
+
+    function submitTeamForm() {
+      syncTeamInputs();
+      if (!teamForm.discord.startsWith("@") || teamForm.discord.length < 2) {
+        alert("Укажите ник Discord через @.");
+        return;
+      }
+      if (!teamForm.roles.length) {
+        alert("Выберите хотя бы одну роль.");
+        return;
+      }
+      if (!teamForm.games.length) {
+        alert("Выберите хотя бы одну игру.");
+        return;
+      }
+      if (!teamForm.device) {
+        alert("Выберите устройство: ПК или ТЕЛЕФОН.");
+        return;
+      }
+
+      const text =
+        `👥 *ЗАЯВКА В КОМАНДУ NORMALFUNK*\n` +
+        `• Discord: ${teamForm.discord}\n` +
+        `• Роли: ${teamForm.roles.join(", ")}\n` +
+        `• Игры: ${teamForm.games.join(", ")}\n` +
+        `• Устройство: ${teamForm.device}\n` +
+        `• Примеры работ: ${teamForm.portfolio || "Не указано"}`;
+
+      dispatchToAdmin("Заявка в команду", text);
+      teamForm = { discord: "", roles: [], games: [], device: "", portfolio: "" };
+      renderCurrentView();
+      alert("Заявка в команду отправлена!");
+    }
+
+    /* ==================== 6. О НАС / О БОТЕ ==================== */
+    function renderAboutView() {
+      return `
+        <div class="panel center-msg">
+          <div class="section-title">ℹ️ ИНФОРМАЦИЯ О БОТЕ</div>
+          <p class="muted">
+            Добро пожаловать! Наш бот — это универсальный центр для покупок и связи с каналом NormalFunk.
+          </p>
+          <div style="margin-top:12px; text-align:left; font-size:13px; line-height:1.55;">
+            🤖 <b>Что умеет бот:</b><br>
+            1. 🛒 Магазин — удобная и быстрая покупка игровой валюты и товаров.<br>
+            2. 📢 Реклама — покупка рекламы вашего канала, бота или проекта.<br>
+            3. 🤝 Сотрудничество — предложения по партнёрству и проектам.<br>
+            4. 🎬 Коллаборации — совместные видео, стримы и ивенты.<br><br>
+            👑 <b>Автор и администратор:</b><br>
+            • Владелец: @Normal_Funk<br>
+            • Официальный канал: NormalFunk<br>
+            • Гарантия честности, безопасности и быстрого ответа!
+          </div>
+          <div class="menu-grid">
+            <a class="menu-btn" style="text-decoration:none;" href="https://t.me/tg_NormalFunk" target="_blank">📣 Наш Telegram</a>
+            <a class="menu-btn" style="text-decoration:none;" href="https://www.youtube.com/@NormalFunk" target="_blank">🔴 YouTube</a>
+            <a class="menu-btn wide" style="text-decoration:none;" href="https://www.tiktok.com/@normalfunk?_r=1&_t=ZS-99WZoXEaR8P" target="_blank">🎵 TikTok</a>
+            <button class="menu-btn wide" onclick="navigate('home')">↩ Назад</button>
+          </div>
+        </div>
+      `;
+    }
+
+    /* ==================== 7. БАГИ / ИДЕИ ==================== */
+    function renderFeedbackView() {
+      return `
+        <div class="panel">
+          <div class="section-title center-msg">🛠 ОБРАТНАЯ СВЯЗЬ (БАГИ И ИДЕИ)</div>
+          <p class="muted center-msg">
+            Нашли ошибку в работе бота или у вас есть крутая идея по улучшению?
+            Выберите нужный раздел ниже, чтобы отправить сообщение команде проекта 👇
+          </p>
+
+          <div class="field">
+            <label>🛠 Опишите обнаруженный баг (где ошибка, что пошло не так, скрин/видео — по возможности)</label>
+            <textarea id="bugInput" rows="3" placeholder="1. Где произошла ошибка...\n2. Что именно пошло не так..."></textarea>
+          </div>
+          <button class="btn btn-yellow" style="margin-top:8px;" onclick="sendSimpleRequest('Сообщение о баге', 'bugInput')">🐛 Написать о баге</button>
+
+          <div class="field" style="margin-top:16px;">
+            <label>💡 Напишите ваше предложение или идею одним сообщением</label>
+            <textarea id="ideaInput" rows="3" placeholder="Опишите идею как можно подробнее..."></textarea>
+          </div>
+          <button class="btn" style="margin-top:8px;" onclick="sendSimpleRequest('Предложение / Идея', 'ideaInput')">💡 Предложить идею</button>
+        </div>
+      `;
+    }
+
+    /* ==================== 8. ПРОФИЛЬ (ВСЕ ЗАКАЗЫ + ОЦЕНКА) ==================== */
+    function renderProfileView() {
+      const orders = loadOrders().filter((o) => o.ownerNick === currentUser.nick);
+      const initial = (currentUser.nick || "N").charAt(0).toUpperCase();
+
+      return `
+        <div class="panel">
+          <div class="profile-head">
+            ${
+              currentUser.avatar
+                ? `<img class="avatar" src="${escapeHtml(currentUser.avatar)}" alt="Аватар" />`
+                : `<div class="avatar">${escapeHtml(initial)}</div>`
+            }
+            <div>
+              <div style="font-size:18px; font-weight:900; color:var(--accent);">${escapeHtml(currentUser.nick)}</div>
+              <div class="muted">${escapeHtml(currentUser.tgUsername)} • Режим: ${currentUser.mode === "guest" ? "Гость" : "Аккаунт"}</div>
+            </div>
+          </div>
+
+          <div class="tab-row">
+            <button class="tab-btn ${profileTab === "orders" ? "active" : ""}" onclick="setProfileTab('orders')">📦 ВСЕ ЗАКАЗЫ (${orders.length})</button>
+            <button class="tab-btn ${profileTab === "rating" ? "active" : ""}" onclick="setProfileTab('rating')">⭐ ОЦЕНКА ОПЛАТЫ</button>
+          </div>
+
+          ${
+            profileTab === "orders"
+              ? `<div style="margin-top:12px;">
+                  ${
+                    orders.length === 0
+                      ? `<p class="muted">У вас пока нет оформленных заказов.</p>`
+                      : orders.map((o) => `
+                          <div class="price-row" style="margin-bottom:8px;">
+                            <div>
+                              <div class="price-name">${escapeHtml(o.itemName)}</div>
+                              <div class="price-sub">${escapeHtml(o.category)} • Оплата: ${escapeHtml(o.paymentMethod || "—")} • ${escapeHtml(o.time)}</div>
+                            </div>
+                            <span class="new-price">${escapeHtml(o.priceStr)}</span>
+                          </div>
+                        `).join("")
+                  }
+                </div>`
+              : `<div style="margin-top:12px;" class="muted">
+                  <p><b>Статус надёжности по оплатам:</b> ${escapeHtml(currentUser.fastPayerScore)}</p>
+                  <p style="margin-top:6px;">
+                    Отметка показывает, оплачивает ли покупатель заказы оперативно после оформления заявки.
+                  </p>
+                </div>`
+          }
+
+          <button class="btn" style="margin-top:16px;" onclick="logoutUser()">Выйти из профиля</button>
+        </div>
+      `;
+    }
+
+    function setProfileTab(tab) {
+      profileTab = tab;
+      renderCurrentView();
+    }
+
+    /* ==================== ЗАПИСЬ ЗАКАЗА И ОТПРАВКА С ССЫЛКОЙ НА ЧАТ ==================== */
+    function getUserChatLink() {
+      const cleanHandle = (currentUser.tgUsername || "").replace(/^@/, "").trim();
+      if (cleanHandle) {
+        return `https://t.me/${cleanHandle}`;
+      }
+      if (currentUser.tgId) {
+        return `tg://user?id=${currentUser.tgId}`;
+      }
+      return `https://t.me/${ADMIN_USERNAME}`;
+    }
+
+    function recordOrderAndNotify(category, itemName, priceStr, formattedText, paymentMethod = "—") {
+      const orders = loadOrders();
+      orders.unshift({
+        ownerNick: currentUser.nick,
+        category,
+        itemName,
+        priceStr,
+        paymentMethod,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      });
+      saveOrders(orders);
+
+      const msgs = loadMessages();
+      msgs.unshift({
+        id: "ord-" + Date.now(),
+        sender: "NORMALBLOX STORE",
+        preview: `Заказ оформлен: ${itemName} (${priceStr})`,
+        fullText: `Вы оформили заявку на «${itemName}» (${priceStr}). Способ оплаты: ${paymentMethod}. Свяжитесь с @${ADMIN_USERNAME} для выдачи.`,
+        unread: true,
+        time: "сейчас"
+      });
+      saveMessages(msgs);
+
+      dispatchToAdmin("Новый заказ", formattedText);
+    }
+
+    function dispatchToAdmin(headerTitle, bodyMarkdown) {
+      const chatLink = getUserChatLink();
+      const fullReport =
+        `${bodyMarkdown}\n` +
+        `• Покупатель: ${currentUser.nick} (${currentUser.tgUsername})\n` +
+        `• Чат с пользователем: ${chatLink}`;
+
+      if (BOT_TOKEN && ADMIN_CHAT_ID) {
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: ADMIN_CHAT_ID,
+            text: fullReport,
+            parse_mode: "Markdown"
+          })
+        }).catch(() => {});
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
   </script>
 </body>
 </html>
