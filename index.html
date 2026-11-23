@@ -372,6 +372,46 @@
       box-shadow: 0 0 18px rgba(250, 204, 21, 0.25);
     }
 
+    .chat-messages {
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 12px 0;
+      padding: 8px;
+      background: #0d0b16;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .chat-msg {
+      padding: 8px 12px;
+      border-radius: 12px;
+      max-width: 80%;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .chat-msg.incoming {
+      background: var(--surface-2);
+      align-self: flex-start;
+      border-bottom-left-radius: 3px;
+    }
+
+    .chat-msg.outgoing {
+      background: var(--accent);
+      color: #090a0f;
+      align-self: flex-end;
+      border-bottom-right-radius: 3px;
+      font-weight: 650;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 8px;
+    }
+
     .profile-head {
       display: flex;
       align-items: center;
@@ -535,12 +575,12 @@
     }
 
     .nav-item span {
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 700;
       line-height: 1.05;
       text-align: center;
       color: #ffffff;
-      word-break: break-word;
+      word-break: break-all;
     }
 
     .nav-item.active svg {
@@ -610,7 +650,8 @@
       <div class="skipper-bubble" id="skipperBubble"></div>
       <div class="skipper-row">
         <div class="skipper-avatar" id="skipperAvatar">
-          <img src="skipper.png" alt="Шкипер" onerror="this.style.display='none'; this.parentNode.textContent='ШКИПЕР';" />
+          <!-- Для аватара Шкипера используется скриншот от пользователя (image_33.png) -->
+          <img src="skipper.png" alt="Шкипер" onerror="this.src='https://i.ibb.co/6P93v0P/skipper.png'; this.onerror=null;" />
         </div>
       </div>
     </div>
@@ -622,7 +663,7 @@
         <div class="muted" id="modalDesc" style="margin-bottom: 10px;"></div>
         <div class="field" id="paymentFieldBox">
           <label>Способ оплаты</label>
-          <select id="paymentSelect">
+          <select id="paymentSelect" onchange="onPaymentSelected()">
             <option value="">— Выберите способ оплаты —</option>
             <option value="Humo">Humo</option>
             <option value="UzCard">UzCard</option>
@@ -662,12 +703,12 @@
 
       <button class="nav-item" data-nav="team" onclick="navigate('team')">
         <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span>ВСТУПИТЬ В КОМАНДУ</span>
+        <span>В КОМАНДУ</span>
       </button>
 
       <button class="nav-item" data-nav="about" onclick="navigate('about')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-        <span>О НАС / О БОТЕ</span>
+        <span>О НАС / БОТЕ</span>
       </button>
 
       <button class="nav-item" data-nav="feedback" onclick="navigate('feedback')">
@@ -684,11 +725,9 @@
 
   <script>
     /* ==================== НАСТРОЙКИ ОТПРАВКИ В TELEGRAM ==================== */
-    // Чтобы заявки и покупки прилетали прямо в твоего бота с ссылкой на чат пользователя,
-    // впиши сюда токен бота и свой Telegram chat_id (или оставь пустыми для открытия чата @Normal_Funk).
     const BOT_TOKEN = "";
     const ADMIN_CHAT_ID = "";
-    const ADMIN_USERNAME = "Normal_Funk";
+    const ADMIN_USERNAME = "NormalFunk";
 
     const tg = window.Telegram && window.Telegram.WebApp;
     if (tg) {
@@ -708,7 +747,6 @@
       return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " сум";
     }
 
-    // Базовые цены в сумах (из скриншотов 2, 4, 5, 6, 8, 9), пересчитанные по формуле +40% с округлением до 1000:
     const SHOP_DATA = {
       roblox: [
         { name: "40 Robux", base: 15000 },
@@ -775,79 +813,37 @@
     /* ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ==================== */
     let currentUser = null;
     let currentNav = "home";
-    let shopSubView = "menu"; // menu | roblox | bsMenu | bsGems | bsPass | fc | so2Menu | so2Pass | so2Gold | brainrot | brainrotQuiz | reviews
-    let otherSubView = "menu"; // menu | ads | collab | partner
-    let profileTab = "orders"; // orders | rating
+    let shopSubView = "menu";
+    let otherSubView = "menu";
+    let profileTab = "orders";
 
-    // Обучалка:
-    // 0 - не активна
-    // 1 - ждём нажатия на кнопку МАГАЗИН
-    // 2 - в магазине, ждём нажатия на ОБУЧЕНИЕ / КУПИТЬ
-    // 3 - открыто окно оплаты, ждём выбор способа оплаты
-    // 4 - перекинуло в СООБЩЕНИЯ, Шкипер рассказывает про сообщения с продавцом, ждём прихода сообщения
-    // 5 - пришло сообщение от продавца, ждём нажатия на подсвеченную рамку сообщения
-    // 6 - открыт чат с поздравлением и кнопкой ЗАВЕРШИТЬ ОБУЧЕНИЕ
+    // Обучение:
+    // 0 - не активно
+    // 1 - ждём клика МАГАЗИН
+    // 2 - ждём ОБУЧЕНИЕ в магазине
+    // 3 - открыта оплата
+    // 4 - перешли в СООБЩЕНИЯ, ждём чат
+    // 5 - открыт чат с поздравлением
     let tutorialStep = 0;
-    let tutorialSellerMsgArrived = false;
-    let tutorialSellerMsgRead = false;
+    let threadChatHistory = {};
 
     let pendingOrder = null;
     let tempRegData = {};
 
-    // Состояние опроса в команду
-    let teamForm = {
-      discord: "",
-      roles: [],
-      games: [],
-      device: "",
-      portfolio: ""
-    };
-
-    // Состояние опроса по Брейнроту
-    let brainrotForm = {
-      name: "",
-      mutation: "",
-      buff: ""
-    };
+    let teamForm = { discord: "", roles: [], games: [], device: "", portfolio: "" };
+    let brainrotForm = { name: "", mutation: "", buff: "" };
 
     /* ==================== ЛОКАЛЬНОЕ ХРАНИЛИЩЕ ==================== */
     function loadUsersDB() {
-      try {
-        return JSON.parse(localStorage.getItem("nf_users_db") || "[]");
-      } catch {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem("nf_users_db") || "[]"); } catch { return []; }
     }
-
-    function saveUsersDB(list) {
-      localStorage.setItem("nf_users_db", JSON.stringify(list));
-    }
-
+    function saveUsersDB(list) { localStorage.setItem("nf_users_db", JSON.stringify(list)); }
     function loadOrders() {
-      try {
-        return JSON.parse(localStorage.getItem("nf_orders") || "[]");
-      } catch {
-        return [];
-      }
+      try { return JSON.parse(localStorage.getItem("nf_orders") || "[]"); } catch { return []; }
     }
+    function saveOrders(list) { localStorage.setItem("nf_orders", JSON.stringify(list)); }
 
-    function saveOrders(list) {
-      localStorage.setItem("nf_orders", JSON.stringify(list));
-    }
-
-    function loadMessages() {
-      try {
-        return JSON.parse(localStorage.getItem("nf_messages") || "[]");
-      } catch {
-        return [];
-      }
-    }
-
-    function saveMessages(list) {
-      localStorage.setItem("nf_messages", JSON.stringify(list));
-    }
-
-    /* ==================== АВТОРИЗАЦИЯ ==================== */
+    /* ==================== АВТОРИЗАЦИЯ И ДИАЛОГ ОБУЧЕНИЯ ==================== */
     function openAuthForm(mode) {
       const box = document.getElementById("authBox");
       if (mode === "register") {
@@ -961,7 +957,7 @@
       let tgHandle = document.getElementById("regTg").value.trim();
       const err = document.getElementById("authError");
       if (!tgHandle.startsWith("@") || tgHandle.length < 2) {
-        err.textContent = "Введите ник в ТГ через @ (например, @nikita).";
+        err.textContent = "Введите ник в ТГ через @.";
         return;
       }
 
@@ -972,13 +968,11 @@
         pass: tempRegData.pass,
         nick: tempRegData.nick,
         tgUsername: tgHandle,
-        tgId: tgUser ? tgUser.id : null,
-        avatar: tgUser && tgUser.photo_url ? tgUser.photo_url : "",
         fastPayerScore: "Новый покупатель (оценка формируется)"
       };
       db.push(userObj);
       saveUsersDB(db);
-      enterApp(userObj);
+      promptTutorial(userObj);
     }
 
     function submitLogin() {
@@ -992,7 +986,7 @@
         err.textContent = "Неверная почта или пароль.";
         return;
       }
-      enterApp(found);
+      promptTutorial(found);
     }
 
     function submitGuest() {
@@ -1013,22 +1007,40 @@
         mode: "guest",
         nick,
         tgUsername: tgHandle,
-        tgId: tgUser ? tgUser.id : null,
-        avatar: tgUser && tgUser.photo_url ? tgUser.photo_url : "",
         fastPayerScore: "Гость • Наблюдение за оплатами"
       };
-      enterApp(guestObj);
+      promptTutorial(guestObj);
     }
 
-    function enterApp(userObj) {
+    /* ПОКАЗ МОДАЛКИ: ХОТИТЕ ПРОЙТИ ОБУЧЕНИЕ? */
+    function promptTutorial(userObj) {
       currentUser = userObj;
+      const box = document.getElementById("authBox");
+      box.innerHTML = `
+        <div class="auth-title" style="color:var(--accent);">ХОТИТЕ ПРОЙТИ ОБУЧЕНИЕ?</div>
+        <div class="auth-sub" style="margin-top:12px;">
+          Шкипер покажет вам, как устроен магазин NORMALBLOX STORE, как выбирать паки и общаться с продавцом.
+        </div>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button class="btn btn-yellow" onclick="enterAppWithTutorial(true)">ДА</button>
+          <button class="btn" onclick="enterAppWithTutorial(false)">НЕТ</button>
+        </div>
+      `;
+    }
+
+    function enterAppWithTutorial(wantsTutorial) {
       document.getElementById("authScreen").style.display = "none";
       document.getElementById("appScreen").style.display = "block";
       document.getElementById("topbarUser").innerHTML =
-        `<b>${escapeHtml(userObj.nick)}</b> <span>${escapeHtml(userObj.tgUsername)}</span>`;
+        `<b>${escapeHtml(currentUser.nick)}</b> <span>${escapeHtml(currentUser.tgUsername)}</span>`;
 
-      startTutorial();
-      renderCurrentView();
+      if (wantsTutorial) {
+        startTutorial();
+      } else {
+        tutorialStep = 0;
+        document.getElementById("skipperTutorial").classList.remove("active");
+        navigate("home");
+      }
     }
 
     function logoutUser() {
@@ -1044,8 +1056,7 @@
     /* ==================== ОБУЧАЛКА СО ШКИПЕРОМ ==================== */
     function startTutorial() {
       tutorialStep = 1;
-      tutorialSellerMsgArrived = false;
-      tutorialSellerMsgRead = false;
+      navigate("home");
       updateTutorialUI();
     }
 
@@ -1075,33 +1086,20 @@
         if (payBox) payBox.classList.add("tutorial-highlight");
       } else if (tutorialStep === 4) {
         bubble.textContent = "ЗДЕСЬ НАХОДЯТСЯ ВСЕ СООБЩЕНИЯ С ПРОДАВЦОМ.";
-        if (!tutorialSellerMsgArrived) {
-          setTimeout(() => {
-            if (tutorialStep === 4) {
-              tutorialSellerMsgArrived = true;
-              const msgs = loadMessages();
-              msgs.unshift({
-                id: "tut-seller-1",
-                sender: "Продавец NormalFunk",
-                preview: "Привет! Заказ по обучению принят, загляни в чат!",
-                fullText: "ПОЗДРАВЛЯЮ!!! ТЫ ПРОШЁЛ ОБУЧЕНИЕ",
-                isTutorialFinal: true,
-                unread: true,
-                time: "только что"
-              });
-              saveMessages(msgs);
-              tutorialStep = 5;
-              if (currentNav === "messages") renderCurrentView();
-              updateTutorialUI();
-            }
-          }, 1400);
-        }
+        // Создаём диалог во встроенном чате
+        const adminId = "NormalFunk";
+        threadChatHistory[adminId] = [
+          { sender: "admin", text: "Привет! Твой заказ по обучению зарегистрирован." },
+          { sender: "admin", text: "ПОЗДРАВЛЯЮ!!! ТЫ ПРОШЁЛ ОБУЧЕНИЕ" }
+        ];
+        
+        // Автоматически переходим в сообщения, чтобы иконка зажглась
+        const msgBtn = document.getElementById("navMessagesBtn");
+        if (msgBtn) msgBtn.classList.add("tutorial-highlight");
       } else if (tutorialStep === 5) {
-        bubble.textContent = "ТЕБЕ НАПИСАЛ ПРОДОВЕЦ, ТЕПЕРЬ ПЕРЕЙДИ К НИМУ В ЧАТ";
-        const unreadCard = document.querySelector(".msg-card.unread");
-        if (unreadCard) unreadCard.classList.add("tutorial-highlight");
-      } else if (tutorialStep === 6) {
-        bubble.textContent = "Нажми «ЗАВЕРШИТЬ ОБУЧЕНИЕ» внизу сообщения, чтобы перейти на ГЛАВНУЮ.";
+        bubble.textContent = "ТЕБЕ НАПИСАЛ ПРОДАВЕЦ, ТЕПЕРЬ ПЕРЕЙДИ К НЕМУ В ЧАТ СВЕРХУ";
+        const chatItem = document.getElementById("tutChatItem");
+        if (chatItem) chatItem.classList.add("tutorial-highlight");
       }
     }
 
@@ -1131,7 +1129,7 @@
       if (tutorialStep === 1 && navName === "shop") {
         tutorialStep = 2;
       } else if (tutorialStep === 4 && navName === "messages") {
-        // шаг 4 остаётся, пока не придёт сообщение (через 1.4 сек станет шагом 5)
+        tutorialStep = 5;
       }
 
       renderCurrentView();
@@ -1474,6 +1472,13 @@
       document.getElementById("checkoutModal").classList.add("open");
 
       if (tutorialStep === 2 && isTutorialItem) {
+        // Мы НЕ меняем шаг туториала на 3 СРАЗУ, дабы не спугнуть highlight, 
+        // а ждём пока юзер действительно откроет и начнет выбирать.
+      }
+    }
+
+    function onPaymentSelected() {
+      if (tutorialStep === 2 && pendingOrder && pendingOrder.isTutorialItem) {
         tutorialStep = 3;
         updateTutorialUI();
       }
@@ -1509,67 +1514,67 @@
       recordOrderAndNotify(category, itemName, priceStr, text, method);
       closeCheckoutModal();
 
-      if (tutorialStep === 3 && isTutorialItem) {
+      if (isTutorialItem) {
         tutorialStep = 4;
         navigate("messages");
       }
     }
 
-    /* ==================== 3. СООБЩЕНИЯ ==================== */
+    /* ==================== 3. СООБЩЕНИЯ (ВСТРОЕННЫЙ ЧАТ) ==================== */
     function renderMessagesView() {
-      const msgs = loadMessages();
+      const adminId = "NormalFunk";
+      const history = threadChatHistory[adminId] || [
+        { sender: "admin", text: `Добро пожаловать в поддержку NORMALBLOX STORE! Вы можете написать @${ADMIN_USERNAME} прямо здесь.` }
+      ];
+
       return `
-        <div class="panel">
-          <div class="section-title">💬 СООБЩЕНИЯ</div>
-          <p class="muted">Здесь отображаются сообщения с продавцом и уведомления по заказам.</p>
+        <div class="panel" id="tutChatItem">
+          <div class="section-title">💬 ЧАТ С АДМИНИСТРАТОРОМ NormalFunk</div>
+          <p class="muted">Вы общаетесь напрямую внутри приложения.</p>
+          
+          <div class="chat-messages" id="chatScreenContainer">
+            ${history.map((msg) => `
+              <div class="chat-msg ${msg.sender === "user" ? "outgoing" : "incoming"}">
+                ${escapeHtml(msg.text)}
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="chat-input-row">
+            <input type="text" id="chatInputField" placeholder="Введите ваше сообщение..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
+            <button class="btn btn-yellow" style="width: auto; padding: 0 16px;" onclick="sendChatMessage()">Отправить</button>
+          </div>
+
           ${
-            msgs.length === 0
-              ? `<div class="msg-card"><div class="muted">Пока сообщений нет. Оформите заказ или пройдите обучение, чтобы увидеть диалог с продавцом.</div></div>`
-              : msgs.map((m) => `
-                  <div class="msg-card ${m.unread ? "unread" : ""}" onclick="openMessageThread('${m.id}')">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <b>${escapeHtml(m.sender)}</b>
-                      <span class="muted" style="font-size:11px;">${escapeHtml(m.time)}</span>
-                    </div>
-                    <div style="margin-top:6px; font-size:13px; color:#e2e8f0;">${escapeHtml(m.preview)}</div>
-                    ${m.unread ? `<div style="margin-top:6px; font-size:11px; color:var(--accent); font-weight:800;">● Новое сообщение</div>` : ""}
-                  </div>
-                `).join("")
+            tutorialStep === 5
+              ? `<button class="btn btn-yellow" style="margin-top:14px;" onclick="finishTutorial()">ЗАВЕРШИТЬ ОБУЧЕНИЕ</button>`
+              : ""
           }
         </div>
       `;
     }
 
-    function openMessageThread(msgId) {
-      const msgs = loadMessages();
-      const idx = msgs.findIndex((x) => x.id === msgId);
-      if (idx === -1) return;
-      msgs[idx].unread = false;
-      saveMessages(msgs);
+    function sendChatMessage() {
+      const input = document.getElementById("chatInputField");
+      const text = input ? input.value.trim() : "";
+      if (!text) return;
 
-      const item = msgs[idx];
-      if (item.isTutorialFinal && tutorialStep === 5) {
-        tutorialStep = 6;
-        updateTutorialUI();
+      const adminId = "NormalFunk";
+      if (!threadChatHistory[adminId]) {
+        threadChatHistory[adminId] = [];
       }
 
-      const container = document.getElementById("viewContainer");
-      container.innerHTML = `
-        <div class="panel center-msg">
-          <div class="section-title">${escapeHtml(item.sender)}</div>
-          <p style="margin-top:10px; font-size:16px; font-weight:800; color:var(--accent);">
-            ${escapeHtml(item.fullText)}
-          </p>
-          <div style="margin-top:18px; display:flex; flex-direction:column; gap:8px;">
-            ${
-              item.isTutorialFinal
-                ? `<button class="btn btn-yellow" onclick="finishTutorial()">ЗАВЕРШИТЬ ОБУЧЕНИЕ</button>`
-                : `<a class="btn btn-yellow" style="text-decoration:none;" href="https://t.me/${ADMIN_USERNAME}" target="_blank">Открыть чат в Telegram</a>`
-            }
-            <button class="btn" onclick="renderCurrentView()">↩ Назад к сообщениям</button>
-          </div>
-        </div>
-      `;
+      threadChatHistory[adminId].push({ sender: "user", text });
+      
+      // Бот-уведомление администратору о сообщении в чате
+      dispatchToAdmin("Новое сообщение в чате", `💬 *Сообщение от пользователя*:\n${text}`);
+
+      input.value = "";
+      renderCurrentView();
+
+      // Авто-скролл вниз
+      const chatContainer = document.getElementById("chatScreenContainer");
+      if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
     /* ==================== 4. ДРУГОЕ ==================== */
@@ -1732,7 +1737,7 @@
           </div>
 
           <div class="field">
-            <label>3. В какие игры из тех, что есть на канале (Roblox, Minecraft, CS2, GTA, Standoff 2), ты играешь? (можно выбрать несколько)</label>
+            <label>3. В какие игры из тех, что есть на канале ты играешь? (можно выбрать несколько)</label>
             <div>
               ${gamesList.map((g) => `
                 <button type="button" class="choice-chip ${teamForm.games.includes(g) ? "active" : ""}" onclick="toggleTeamMulti('games', '${g}')">
@@ -1743,7 +1748,7 @@
           </div>
 
           <div class="field">
-            <label>4. Твои характеристики ПК или мобильного устройства для совместных стримов (выбрать только одно)</label>
+            <label>4. Твои характеристики ПК или мобильного устройства (выбрать только одно)</label>
             <div>
               ${["ПК", "ТЕЛЕФОН"].map((d) => `
                 <button type="button" class="choice-chip ${teamForm.device === d ? "active" : ""}" onclick="selectTeamDevice('${d}')">
@@ -1754,7 +1759,7 @@
           </div>
 
           <div class="field">
-            <label>5. Ссылки на прошлые работы или примеры монтажа (можно пропустить)</label>
+            <label>5. Ссылки на прошлые работы (можно пропустить)</label>
             <input type="text" id="teamPortfolio" value="${escapeHtml(teamForm.portfolio)}" placeholder="Ссылка на портфолио или видео" />
           </div>
 
@@ -1837,7 +1842,7 @@
             3. 🤝 Сотрудничество — предложения по партнёрству и проектам.<br>
             4. 🎬 Коллаборации — совместные видео, стримы и ивенты.<br><br>
             👑 <b>Автор и администратор:</b><br>
-            • Владелец: @Normal_Funk<br>
+            • Владелец: @NormalFunk<br>
             • Официальный канал: NormalFunk<br>
             • Гарантия честности, безопасности и быстрого ответа!
           </div>
@@ -1862,7 +1867,7 @@
           </p>
 
           <div class="field">
-            <label>🛠 Опишите обнаруженный баг (где ошибка, что пошло не так, скрин/видео — по возможности)</label>
+            <label>🛠 Опишите обнаруженный баг (где ошибка, что пошло не так)</label>
             <textarea id="bugInput" rows="3" placeholder="1. Где произошла ошибка...\n2. Что именно пошло не так..."></textarea>
           </div>
           <button class="btn btn-yellow" style="margin-top:8px;" onclick="sendSimpleRequest('Сообщение о баге', 'bugInput')">🐛 Написать о баге</button>
@@ -1941,9 +1946,6 @@
       if (cleanHandle) {
         return `https://t.me/${cleanHandle}`;
       }
-      if (currentUser.tgId) {
-        return `tg://user?id=${currentUser.tgId}`;
-      }
       return `https://t.me/${ADMIN_USERNAME}`;
     }
 
@@ -1959,17 +1961,6 @@
       });
       saveOrders(orders);
 
-      const msgs = loadMessages();
-      msgs.unshift({
-        id: "ord-" + Date.now(),
-        sender: "NORMALBLOX STORE",
-        preview: `Заказ оформлен: ${itemName} (${priceStr})`,
-        fullText: `Вы оформили заявку на «${itemName}» (${priceStr}). Способ оплаты: ${paymentMethod}. Свяжитесь с @${ADMIN_USERNAME} для выдачи.`,
-        unread: true,
-        time: "сейчас"
-      });
-      saveMessages(msgs);
-
       dispatchToAdmin("Новый заказ", formattedText);
     }
 
@@ -1980,6 +1971,7 @@
         `• Покупатель: ${currentUser.nick} (${currentUser.tgUsername})\n` +
         `• Чат с пользователем: ${chatLink}`;
 
+      // Отправка в бот Telegram, если настроены BOT_TOKEN и ADMIN_CHAT_ID
       if (BOT_TOKEN && ADMIN_CHAT_ID) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: "POST",
@@ -1991,6 +1983,15 @@
           })
         }).catch(() => {});
       }
+
+      // Если запущено в Telegram Mini App, отправляем данные обратно в бота
+      if (tg && tg.sendData) {
+        tg.sendData(JSON.stringify({
+          type: "user_action",
+          action: headerTitle,
+          details: fullReport
+        }));
+      }
     }
 
     function escapeHtml(str) {
@@ -2000,6 +2001,9 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
     }
+    
+    // Инициализация при открытии страницы
+    resetAuthStart();
   </script>
 </body>
 </html>
