@@ -1,1 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NORMALBLOX STORE</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --card: #151921;
+      --card-2: #1c212c;
+      --accent: #facc15;
+      --accent-hover: #eab308;
+      --neon: #4ade80;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 105px;
+      min-height: 100vh;
+    }
+
+    .header {
+      padding: 18px 16px 12px;
+      background: linear-gradient(180deg, rgba(250, 204, 21, 0.14) 0%, rgba(12, 14, 18, 0) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .brand {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      color: var(--accent);
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(74, 222, 128, 0.14);
+      color: var(--neon);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .payments {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #cbd5e1;
+      background: var(--card);
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 16px;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s ease;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: #0c0e12;
+      border-color: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 4px 16px 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .game-tag {
+      font-size: 11px;
+      color: var(--accent);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .item-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-top: 3px;
+      line-height: 1.25;
+    }
+
+    .item-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    .price {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--neon);
+    }
+
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .btn-add {
+      width: 100%;
+      padding: 9px 10px;
+      border: none;
+      border-radius: 10px;
+      background: var(--card-2);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+    }
+
+    .btn-add:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--card-2);
+      border-radius: 10px;
+      border: 1px solid var(--accent);
+      overflow: hidden;
+    }
+
+    .stepper button {
+      width: 34px;
+      height: 34px;
+      border: none;
+      background: transparent;
+      color: var(--accent);
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .stepper span {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .checkout-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(21, 25, 33, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 20;
+    }
+
+    .checkout-bar.visible {
+      display: flex;
+    }
+
+    .method-select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #0c0e12;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .checkout-btn:hover {
+      background: var(--accent-hover);
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand-row">
+      <div class="brand">⚡ NORMALBLOX STORE</div>
+      <div class="badge">ГАРАНТИЯ</div>
+    </div>
+    <div class="subtitle" id="greeting">Выбирай пак и оформляй заказ в пару кликов</div>
+    <div class="payments">💳 Оплата: Humo · UzCard · Payme · Uzum Bank · Наличные</div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="grid" id="catalog"></div>
+
+  <div class="checkout-bar" id="checkoutBar">
+    <select class="method-select" id="paymentMethod">
+      <option value="Humo">Способ оплаты: Humo</option>
+      <option value="UzCard">Способ оплаты: UzCard</option>
+      <option value="Payme">Способ оплаты: Payme</option>
+      <option value="Uzum Bank">Способ оплаты: Uzum Bank</option>
+      <option value="Наличные">Способ оплаты: Наличные</option>
+    </select>
+    <button class="checkout-btn" id="checkoutBtn" onclick="sendOrder()">Оформить заказ</button>
+  </div>
+
+  <script>
+    const ADMIN_USERNAME = "Normal_Funk";
+    const CURRENCY = "сум";
+
+    const CATEGORIES = [
+      "Все",
+      "Roblox",
+      "Brainrot",
+      "Brawl Stars",
+      "FC Mobile",
+      "Standoff 2"
+    ];
+
+    const PRODUCTS = [
+      { id: 1, game: "Roblox", title: "100 Robux", desc: "Быстрая выдача", price: 25000 },
+      { id: 2, game: "Roblox", title: "400 Robux", desc: "Популярный пак", price: 90000 },
+      { id: 3, game: "Roblox", title: "800 Robux", desc: "Выгодный набор", price: 170000 },
+      { id: 4, game: "Brainrot", title: "Стартовый пак", desc: "Предметы / буст", price: 30000 },
+      { id: 5, game: "Brainrot", title: "VIP пак", desc: "Редкие позиции", price: 65000 },
+      { id: 6, game: "Brawl Stars", title: "30 Гемов", desc: "На аккаунт", price: 25000 },
+      { id: 7, game: "Brawl Stars", title: "80 Гемов", desc: "Популярный пак", price: 60000 },
+      { id: 8, game: "FC Mobile", title: "520 FC Points", desc: "Для состава", price: 75000 },
+      { id: 9, game: "FC Mobile", title: "1070 FC Points", desc: "Большой набор", price: 145000 },
+      { id: 10, game: "Standoff 2", title: "100 Голды", desc: "Быстрая передача", price: 22000 },
+      { id: 11, game: "Standoff 2", title: "500 Голды", desc: "Выгодный пак", price: 100000 }
+    ];
+
+    let activeCategory = "Все";
+    const cart = {};
+
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+      if (user && user.first_name) {
+        document.getElementById("greeting").textContent =
+          `Привет, ${user.first_name}! Выбирай пак и оформляй заказ`;
+      }
+    }
+
+    function formatPrice(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " " + CURRENCY;
+    }
+
+    function renderTabs() {
+      const tabsEl = document.getElementById("tabs");
+      tabsEl.innerHTML = "";
+      CATEGORIES.forEach((cat) => {
+        const btn = document.createElement("button");
+        btn.className = "tab" + (cat === activeCategory ? " active" : "");
+        btn.textContent = cat;
+        btn.onclick = () => {
+          activeCategory = cat;
+          renderTabs();
+          renderCatalog();
+        };
+        tabsEl.appendChild(btn);
+      });
+    }
+
+    function changeQty(id, delta) {
+      const next = (cart[id] || 0) + delta;
+      if (next <= 0) {
+        delete cart[id];
+      } else {
+        cart[id] = next;
+      }
+      renderCatalog();
+      updateCheckoutBar();
+    }
+
+    function renderCatalog() {
+      const catalogEl = document.getElementById("catalog");
+      catalogEl.innerHTML = "";
+
+      const list = activeCategory === "Все"
+        ? PRODUCTS
+        : PRODUCTS.filter((item) => item.game === activeCategory);
+
+      list.forEach((item) => {
+        const qty = cart[item.id] || 0;
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div>
+            <div class="game-tag">${item.game}</div>
+            <div class="item-title">${item.title}</div>
+            <div class="item-desc">${item.desc}</div>
+          </div>
+          <div>
+            <div class="price">${formatPrice(item.price)}</div>
+            <div class="qty-controls" style="margin-top: 8px;">
+              ${
+                qty === 0
+                  ? `<button class="btn-add" onclick="changeQty(${item.id}, 1)">+ В корзину</button>`
+                  : `<div class="stepper">
+                       <button onclick="changeQty(${item.id}, -1)">−</button>
+                       <span>${qty} шт.</span>
+                       <button onclick="changeQty(${item.id}, 1)">+</button>
+                     </div>`
+              }
+            </div>
+          </div>
+        `;
+        catalogEl.appendChild(card);
+      });
+    }
+
+    function updateCheckoutBar() {
+      const bar = document.getElementById("checkoutBar");
+      const btn = document.getElementById("checkoutBtn");
+
+      let totalCount = 0;
+      let totalSum = 0;
+
+      for (const [id, qty] of Object.entries(cart)) {
+        const item = PRODUCTS.find((p) => p.id === Number(id));
+        if (item) {
+          totalCount += qty;
+          totalSum += item.price * qty;
+        }
+      }
+
+      if (totalCount === 0) {
+        bar.classList.remove("visible");
+        return;
+      }
+
+      bar.classList.add("visible");
+      btn.textContent = `Оформить (${totalCount} шт.) · ${formatPrice(totalSum)}`;
+    }
+
+    function sendOrder() {
+      const lines = [];
+      let totalSum = 0;
+
+      for (const [id, qty] of Object.entries(cart)) {
+        const item = PRODUCTS.find((p) => p.id === Number(id));
+        if (item) {
+          const sum = item.price * qty;
+          totalSum += sum;
+          lines.push(`• [${item.game}] ${item.title} x${qty} — ${formatPrice(sum)}`);
+        }
+      }
+
+      if (!lines.length) return;
+
+      const method = document.getElementById("paymentMethod").value;
+      const buyer = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
+        ? `@${tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.id}`
+        : "покупатель";
+
+      const text =
+        `Здравствуйте! Хочу сделать заказ в NORMALBLOX STORE:\n\n` +
+        lines.join("\n") +
+        `\n\nИтого: ${formatPrice(totalSum)}` +
+        `\nОплата: ${method}` +
+        `\nОт: ${buyer}`;
+
+      const url = `https://t.me/${ADMIN_USERNAME}?text=${encodeURIComponent(text)}`;
+      if (tg && tg.openTelegramLink) {
+        tg.openTelegramLink(url);
+      } else {
+        window.open(url, "_blank");
+      }
+    }
+
+    renderTabs();
+    renderCatalog();
+    updateCheckoutBar();
+  </script>
+</body>
+</html>
